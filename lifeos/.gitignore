@@ -1,0 +1,12 @@
+node_modules
+dist
+.turbo
+.DS_Store
+coverage
+*.log
+.env
+.env.local
+.env.*.local
+backend/uploads
+backend/prisma/dev.db
+backend/prisma/dev.db-journal

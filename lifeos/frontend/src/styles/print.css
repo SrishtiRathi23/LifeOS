@@ -1,0 +1,14 @@
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  body {
+    background: #fffdf9 !important;
+    color: #2e241d !important;
+  }
+
+  * {
+    box-shadow: none !important;
+  }
+}

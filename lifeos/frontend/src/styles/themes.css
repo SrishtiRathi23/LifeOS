@@ -1,0 +1,96 @@
+:root,
+[data-theme="parchment"] {
+  --cream: #fdf6ee;
+  --parchment: #f5ecd9;
+  --peach: #e8c4a0;
+  --terracotta: #c4956a;
+  --brown: #8b5e3c;
+  --dark-brown: #4a2c1a;
+  --blush: #f2d4c8;
+  --sage: #a8b89a;
+  --dusty-rose: #d4a5a0;
+  --charcoal: #3d3027;
+  --card: rgba(253, 246, 238, 0.9);
+  --line: rgba(139, 94, 60, 0.18);
+  --ink: #3d3027;
+}
+
+[data-theme="midnight-sage"] {
+  --cream: #e8e0d0;
+  --parchment: #c9c0a6;
+  --peach: #d5b17f;
+  --terracotta: #b5894f;
+  --brown: #49533f;
+  --dark-brown: #10261e;
+  --blush: #c3b19d;
+  --sage: #869680;
+  --dusty-rose: #b38d6d;
+  --charcoal: #17261f;
+  --card: rgba(231, 224, 208, 0.88);
+  --line: rgba(16, 38, 30, 0.18);
+  --ink: #17261f;
+}
+
+[data-theme="lavender-dream"] {
+  --cream: #f8f4fb;
+  --parchment: #efe7f6;
+  --peach: #e9cfe4;
+  --terracotta: #b28abf;
+  --brown: #725a7f;
+  --dark-brown: #46344c;
+  --blush: #f2d4c8;
+  --sage: #b9c4b3;
+  --dusty-rose: #d6b0c9;
+  --charcoal: #433942;
+  --card: rgba(248, 244, 251, 0.9);
+  --line: rgba(114, 90, 127, 0.16);
+  --ink: #433942;
+}
+
+[data-theme="ocean-mist"] {
+  --cream: #f7fbfc;
+  --parchment: #dde8ec;
+  --peach: #c4d8df;
+  --terracotta: #7fa3b2;
+  --brown: #53707d;
+  --dark-brown: #2c4351;
+  --blush: #dceff0;
+  --sage: #a7c8c9;
+  --dusty-rose: #b0c8d4;
+  --charcoal: #2f3f47;
+  --card: rgba(247, 251, 252, 0.9);
+  --line: rgba(83, 112, 125, 0.16);
+  --ink: #2f3f47;
+}
+
+[data-theme="cherry-blossom"] {
+  --cream: #fff9fb;
+  --parchment: #ffeef2;
+  --peach: #ffd6de;
+  --terracotta: #db8f9f;
+  --brown: #6e7458;
+  --dark-brown: #314431;
+  --blush: #f9d7df;
+  --sage: #96a07f;
+  --dusty-rose: #dba6b3;
+  --charcoal: #354035;
+  --card: rgba(255, 249, 251, 0.92);
+  --line: rgba(53, 64, 53, 0.13);
+  --ink: #354035;
+}
+
+[data-theme="charcoal-linen"] {
+  --cream: #1d1916;
+  --parchment: #2a2420;
+  --peach: #8c705a;
+  --terracotta: #cfa47b;
+  --brown: #e6d9cb;
+  --dark-brown: #f4eadf;
+  --blush: #5a493d;
+  --sage: #7c8a75;
+  --dusty-rose: #9b7866;
+  --charcoal: #f0e6da;
+  --card: rgba(42, 36, 32, 0.92);
+  --line: rgba(240, 230, 218, 0.1);
+  --ink: #f0e6da;
+}

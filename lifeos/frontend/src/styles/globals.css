@@ -1,0 +1,92 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  font-family: "DM Sans", sans-serif;
+  background: var(--cream);
+  color: var(--ink);
+}
+
+body::before,
+body::after {
+  content: "";
+  position: fixed;
+  inset: auto;
+  pointer-events: none;
+  z-index: 0;
+  filter: blur(70px);
+  opacity: 0.45;
+}
+
+body::before {
+  top: 4rem;
+  right: 6rem;
+  width: 18rem;
+  height: 18rem;
+  background: radial-gradient(circle, color-mix(in srgb, var(--peach) 72%, transparent), transparent 72%);
+}
+
+body::after {
+  left: 2rem;
+  bottom: 3rem;
+  width: 22rem;
+  height: 22rem;
+  background: radial-gradient(circle, color-mix(in srgb, var(--blush) 66%, transparent), transparent 72%);
+}
+
+#root {
+  position: relative;
+  z-index: 1;
+}
+
+button,
+select {
+  font: inherit;
+}
+
+input,
+textarea {
+  font-family: 'Dancing Script', cursive;
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+button {
+  cursor: pointer;
+}
+
+.paper-noise {
+  background-image:
+    radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.25) 0.08rem, transparent 0.09rem),
+    radial-gradient(circle at 80% 0%, rgba(74, 44, 26, 0.06) 0.05rem, transparent 0.08rem);
+  background-size: 1.1rem 1.1rem, 1.35rem 1.35rem;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--terracotta) 70%, transparent);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}

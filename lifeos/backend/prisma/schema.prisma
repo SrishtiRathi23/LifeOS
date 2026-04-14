@@ -1,0 +1,515 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum TaskCategory {
+  college
+  personal
+  learning
+  health
+  finance
+  career
+  hobby
+  other
+}
+
+enum TaskPriority {
+  high
+  medium
+  low
+}
+
+enum TaskStatus {
+  todo
+  in_progress
+  done
+  archived
+}
+
+enum GoalTimeframe {
+  week
+  month
+  year
+  life
+}
+
+enum GoalStatus {
+  active
+  completed
+  paused
+}
+
+enum VisionCategory {
+  career
+  finance
+  health
+  travel
+  relationships
+  skills
+  other
+}
+
+enum ExpenseCategory {
+  food
+  transport
+  college_fees
+  books
+  entertainment
+  health
+  savings
+  misc
+}
+
+enum AssignmentStatus {
+  pending
+  in_progress
+  submitted
+  graded
+}
+
+enum InternshipStatus {
+  shortlisted
+  applied
+  interviewing
+  offer
+  rejected
+}
+
+enum HackathonStatus {
+  planning
+  registered
+  building
+  submitted
+  results
+}
+
+enum HabitCategory {
+  study
+  wellness
+  fitness
+  personal
+  digital
+  other
+}
+
+enum ExerciseType {
+  walk
+  gym
+  yoga
+  sports
+  cycling
+  home_workout
+  other
+}
+
+enum LearningCategory {
+  web_dev
+  dsa
+  cloud
+  ai_ml
+  eee_core
+  gate_prep
+  aptitude
+  soft_skills
+  other
+}
+
+enum HobbyCategory {
+  creative
+  physical
+  digital
+  social
+  other
+}
+
+model User {
+  id            String             @id @default(cuid())
+  name          String
+  email         String             @unique
+  passwordHash  String
+  profilePhoto  String?
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  settings      Json?
+  tasks         Task[]
+  dailyPlans    DailyPlan[]
+  diaryEntries  DiaryEntry[]
+  goals         Goal[]
+  goalSnapshots GoalSnapshot[]
+  visionImages  VisionImage[]
+  expenses      Expense[]
+  budgets       Budget[]
+  subjects      Subject[]
+  assignments   Assignment[]
+  exams         Exam[]
+  internships   Internship[]
+  hackathons    Hackathon[]
+  habits        Habit[]
+  habitLogs     HabitLog[]
+  exerciseLogs  ExerciseLog[]
+  learning      LearningResource[]
+  studyLogs     StudyLog[]
+  hobbies       Hobby[]
+  hobbyLogs     HobbyLog[]
+  moodLogs      MoodLog[]
+  sleepLogs     SleepLog[]
+  waterLogs     WaterLog[]
+}
+
+model DailyPlan {
+  id             String   @id @default(cuid())
+  userId         String
+  date           DateTime
+  brainDump      String?
+  goals          Json?
+  notes          String?
+  mood           Int?
+  priorityMatrix Json?
+  eveningReview  Json?
+  timeBlocks     Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@index([userId, date])
+}
+
+model Task {
+  id          String       @id @default(cuid())
+  userId      String
+  title       String
+  description String?
+  date        DateTime?
+  dueTime     String?
+  category    TaskCategory @default(other)
+  priority    TaskPriority @default(medium)
+  status      TaskStatus   @default(todo)
+  isRecurring Boolean      @default(false)
+  tags        String[]
+  sortOrder   Int          @default(0)
+  source      String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, date])
+  @@index([userId, status])
+}
+
+model DiaryEntry {
+  id           String   @id @default(cuid())
+  userId       String
+  date         DateTime
+  content      String   @db.Text
+  mood         Int?
+  weather      String?
+  gratitude    Json?
+  tomorrowPlan Json?
+  aiReflection String?  @db.Text
+  photos       Json?
+  tags         String[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@index([userId, date])
+}
+
+model Goal {
+  id          String        @id @default(cuid())
+  userId      String
+  title       String
+  description String?
+  timeframe   GoalTimeframe
+  targetDate  DateTime?
+  progress    Int           @default(0)
+  category    String?
+  why         String?
+  status      GoalStatus    @default(active)
+  milestones  Json?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  history     GoalSnapshot[]
+}
+
+model GoalSnapshot {
+  id        String   @id @default(cuid())
+  goalId    String
+  userId    String
+  progress  Int
+  createdAt DateTime @default(now())
+  goal      Goal     @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([goalId, createdAt])
+}
+
+model VisionImage {
+  id          String         @id @default(cuid())
+  userId      String
+  imageUrl    String
+  title       String?
+  affirmation String?
+  category    VisionCategory @default(other)
+  year        Int?
+  position    Int            @default(0)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, category])
+}
+
+model Expense {
+  id            String          @id @default(cuid())
+  userId        String
+  amount        Decimal         @db.Decimal(10, 2)
+  category      ExpenseCategory
+  date          DateTime
+  note          String?
+  paymentMethod String?
+  isRecurring   Boolean         @default(false)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, date])
+}
+
+model Budget {
+  id          String   @id @default(cuid())
+  userId      String
+  month       Int
+  year        Int
+  totalBudget Decimal  @db.Decimal(10, 2)
+  savingsGoal Decimal? @db.Decimal(10, 2)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, month, year])
+}
+
+model Subject {
+  id              String       @id @default(cuid())
+  userId          String
+  name            String
+  credits         Int
+  semester        String
+  attendedClasses Int          @default(0)
+  totalClasses    Int          @default(0)
+  notesUrl        String?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  assignments     Assignment[]
+  exams           Exam[]
+}
+
+model Assignment {
+  id        String           @id @default(cuid())
+  subjectId String
+  userId    String
+  title     String
+  dueDate   DateTime?
+  status    AssignmentStatus @default(pending)
+  marks     Float?
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  subject   Subject          @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Exam {
+  id         String   @id @default(cuid())
+  subjectId  String
+  userId     String
+  date       DateTime
+  type       String
+  marks      Float?
+  totalMarks Float?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  subject    Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Internship {
+  id              String           @id @default(cuid())
+  userId          String
+  company         String
+  role            String
+  status          InternshipStatus @default(applied)
+  appliedDate     DateTime?
+  stipend         String?
+  location        String?
+  notes           String?
+  link            String?
+  contactPerson   String?
+  deadline        DateTime?
+  resumeSent      Boolean          @default(false)
+  coverLetterUsed Boolean          @default(false)
+  interviewDates  Json?
+  feedback        String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Hackathon {
+  id          String          @id @default(cuid())
+  userId      String
+  name        String
+  date        DateTime?
+  mode        String?
+  teamSize    Int?
+  theme       String?
+  status      HackathonStatus @default(planning)
+  idea        String?
+  techStack   String?
+  teamMembers Json?
+  result      String?
+  projectLink String?
+  notes       String?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Habit {
+  id         String        @id @default(cuid())
+  userId     String
+  name       String
+  category   HabitCategory @default(other)
+  targetDays Int           @default(7)
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+  user       User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  logs       HabitLog[]
+}
+
+model HabitLog {
+  id        String   @id @default(cuid())
+  habitId   String
+  userId    String
+  date      DateTime
+  completed Boolean  @default(true)
+  createdAt DateTime @default(now())
+  habit     Habit    @relation(fields: [habitId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([habitId, date])
+  @@index([userId, date])
+}
+
+model ExerciseLog {
+  id        String       @id @default(cuid())
+  userId    String
+  date      DateTime
+  type      ExerciseType
+  duration  Int
+  intensity Int
+  notes     String?
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model LearningResource {
+  id             String           @id @default(cuid())
+  userId         String
+  title          String
+  platform       String?
+  category       LearningCategory @default(other)
+  progress       Int              @default(0)
+  startDate      DateTime?
+  targetDate     DateTime?
+  notes          String?
+  link           String?
+  certificateUrl String?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  studyLogs      StudyLog[]
+}
+
+model StudyLog {
+  id         String           @id @default(cuid())
+  userId     String
+  resourceId String
+  date       DateTime
+  hours      Float
+  createdAt  DateTime         @default(now())
+  resource   LearningResource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  user       User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Hobby {
+  id        String        @id @default(cuid())
+  userId    String
+  name      String
+  category  HobbyCategory @default(other)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  logs      HobbyLog[]
+}
+
+model HobbyLog {
+  id        String   @id @default(cuid())
+  hobbyId   String
+  userId    String
+  date      DateTime
+  duration  Int
+  notes     String?
+  createdAt DateTime @default(now())
+  hobby     Hobby    @relation(fields: [hobbyId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model MoodLog {
+  id          String   @id @default(cuid())
+  userId      String
+  date        DateTime
+  mood        Int
+  note        String?
+  energyLevel Int?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+}
+
+model SleepLog {
+  id        String   @id @default(cuid())
+  userId    String
+  date      DateTime
+  sleepTime DateTime
+  wakeTime  DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+}
+
+model WaterLog {
+  id        String   @id @default(cuid())
+  userId    String
+  date      DateTime
+  glasses   Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+}
