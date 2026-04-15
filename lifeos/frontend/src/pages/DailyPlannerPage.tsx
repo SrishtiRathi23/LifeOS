@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import toast from "react-hot-toast";
-import { Camera, Plus, Sparkles } from "lucide-react";
+import { Camera, Plus, Sparkles, Trash } from "lucide-react";
 import { api, getErrorMessage } from "@/utils/api";
 import { isoDay, prettyDate } from "@/utils/dateHelpers";
 import { Card } from "@/components/ui/Card";
@@ -149,6 +149,17 @@ export function DailyPlannerPage() {
     onError: (error) => toast.error(getErrorMessage(error))
   });
 
+  const deleteTask = useMutation({
+    mutationFn: async (taskId: string) => await api.delete(`/tasks/${taskId}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["todayTasks"] });
+      queryClient.invalidateQueries({ queryKey: ["allTasks"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      toast.success("Task deleted.");
+    },
+    onError: (error) => toast.error(getErrorMessage(error))
+  });
+
   return (
     <section className="mx-auto max-w-7xl space-y-6 px-4 py-8 md:px-8">
       <PageHeader
@@ -198,14 +209,27 @@ export function DailyPlannerPage() {
                 <EmptyState title="No tasks yet" description="Add your first real task for today, or upload a notebook page to extract them." />
               ) : (
                 tasks.map((task) => (
-                  <label key={task.id} className="flex items-center gap-3 rounded-2xl border border-line bg-cream/75 px-4 py-3">
-                    <input type="checkbox" checked={task.status === "done"} onChange={() => toggleTask.mutate(task)} />
-                    <div className="flex-1">
-                      <p className={task.status === "done" ? "line-through text-ink/50" : "text-ink"}>{task.title}</p>
-                      <p className="text-xs capitalize text-ink/55">
-                        {task.category} · {task.priority}
-                      </p>
+                  <label key={task.id} className="group/task relative flex items-center justify-between gap-3 rounded-2xl border border-line bg-cream/75 px-4 py-3 pr-10 hover:shadow-sm transition-shadow cursor-pointer">
+                    <div className="flex items-center gap-3">
+                      <input type="checkbox" checked={task.status === "done"} onChange={() => toggleTask.mutate(task)} />
+                      <div className="flex-1">
+                        <p className={task.status === "done" ? "line-through text-ink/50" : "text-ink"}>{task.title}</p>
+                        <p className="text-xs capitalize text-ink/55">
+                          {task.category} · {task.priority}
+                        </p>
+                      </div>
                     </div>
+                    <button
+                      type="button"
+                      title="Delete task"
+                      className="absolute right-4 text-terracotta/40 hover:text-terracotta opacity-0 group-hover/task:opacity-100 transition-opacity"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        deleteTask.mutate(task.id);
+                      }}
+                    >
+                      <Trash size={16} />
+                    </button>
                   </label>
                 ))
               )}

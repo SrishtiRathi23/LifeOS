@@ -37,7 +37,7 @@ const aiLimiter = rateLimit({
 
 app.use(
   cors({
-    origin: env.CLIENT_URL,
+    origin: [env.CLIENT_URL, "http://localhost:5174"],
     credentials: true
   })
 );
