@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
+import { Trash } from "lucide-react";
+import { useConfirm } from "@/contexts/ConfirmContext";
 import { api, getErrorMessage } from "@/utils/api";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -10,11 +12,13 @@ import { PageHeader } from "@/components/shared/PageHeader";
 
 export function LearningPage() {
   const queryClient = useQueryClient();
+  const confirm = useConfirm();
   const [title, setTitle] = useState("");
   const [platform, setPlatform] = useState("");
   const [category, setCategory] = useState("web_dev");
   const [progress, setProgress] = useState("0");
   const [studyHours, setStudyHours] = useState<Record<string, string>>({});
+  const [studyUnits, setStudyUnits] = useState<Record<string, string>>({});
 
   const { data: resources } = useQuery({
     queryKey: ["learning"],
@@ -44,6 +48,15 @@ export function LearningPage() {
     mutationFn: async ({ id, hours }: { id: string; hours: number }) =>
       (await api.post(`/learning/${id}/study-log`, { date: new Date().toISOString(), hours })).data,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["learning"] }),
+    onError: (error) => toast.error(getErrorMessage(error))
+  });
+
+  const deleteResource = useMutation({
+    mutationFn: async (id: string) => await api.delete(`/learning/${id}`),
+    onSuccess: () => {
+      toast.success("Learning resource deleted.");
+      queryClient.invalidateQueries({ queryKey: ["learning"] });
+    },
     onError: (error) => toast.error(getErrorMessage(error))
   });
 
@@ -81,22 +94,46 @@ export function LearningPage() {
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
           {resources.map((resource: any) => (
-            <Card key={resource.id}>
-              <h3 className="font-serif text-3xl italic text-ink">{resource.title}</h3>
-              <p className="mt-2 text-sm text-ink/65">{resource.platform || "No platform"} · {resource.category}</p>
+            <Card key={resource.id} className="group/learning relative">
+              <div className="pr-6">
+                <h3 className="font-serif text-3xl italic text-ink">{resource.title}</h3>
+                <p className="mt-2 text-sm text-ink/65">{resource.platform || "No platform"} · {resource.category}</p>
+              </div>
+              <button
+                type="button"
+                title="Delete resource"
+                className="absolute right-3 top-4 text-terracotta/40 hover:text-terracotta opacity-0 group-hover/learning:opacity-100 transition-all"
+                onClick={async () => (await confirm({ title: "Delete resource", message: "Are you sure you want to delete this resource?" })) && deleteResource.mutate(resource.id)}
+              >
+                <Trash size={16} />
+              </button>
               <div className="mt-4 h-3 overflow-hidden rounded-full bg-parchment">
                 <div className="h-full rounded-full bg-terracotta" style={{ width: `${resource.progress}%` }} />
               </div>
-              <div className="mt-4 flex gap-3">
+              <div className="mt-4 flex gap-2">
                 <Input
+                  className="flex-1"
                   value={studyHours[resource.id] ?? ""}
                   onChange={(e) => setStudyHours((prev) => ({ ...prev, [resource.id]: e.target.value }))}
-                  placeholder="Study hours"
+                  placeholder="Time spent"
                 />
+                <select
+                  value={studyUnits[resource.id] ?? "hrs"}
+                  onChange={(e) => setStudyUnits((prev) => ({ ...prev, [resource.id]: e.target.value }))}
+                  className="w-[85px] rounded-2xl border border-line bg-cream px-2 py-3 text-sm text-ink outline-none"
+                >
+                  <option value="hrs">hrs</option>
+                  <option value="mins">mins</option>
+                </select>
                 <Button
                   type="button"
                   variant="secondary"
-                  onClick={() => studyHours[resource.id] && addStudyLog.mutate({ id: resource.id, hours: Number(studyHours[resource.id]) })}
+                  onClick={() => {
+                    if (!studyHours[resource.id]) return;
+                    const val = Number(studyHours[resource.id]);
+                    const hours = (studyUnits[resource.id] ?? "hrs") === "mins" ? val / 60 : val;
+                    addStudyLog.mutate({ id: resource.id, hours });
+                  }}
                 >
                   Log
                 </Button>

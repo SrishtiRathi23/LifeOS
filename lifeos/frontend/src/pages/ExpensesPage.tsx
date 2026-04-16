@@ -3,6 +3,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from "recharts";
 import dayjs from "dayjs";
 import toast from "react-hot-toast";
+import { Trash } from "lucide-react";
+import { useConfirm } from "@/contexts/ConfirmContext";
 import { api, getErrorMessage } from "@/utils/api";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -15,6 +17,7 @@ const chartColors = ["#C4956A", "#A8B89A", "#D4A5A0", "#8B5E3C", "#E8C4A0", "#3D
 
 export function ExpensesPage() {
   const queryClient = useQueryClient();
+  const confirm = useConfirm();
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState("food");
   const [note, setNote] = useState("");
@@ -65,6 +68,16 @@ export function ExpensesPage() {
         })
       ).data,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["expenseSummary"] }),
+    onError: (error) => toast.error(getErrorMessage(error))
+  });
+
+  const deleteExpense = useMutation({
+    mutationFn: async (id: string) => await api.delete(`/expenses/${id}`),
+    onSuccess: () => {
+      toast.success("Expense deleted.");
+      queryClient.invalidateQueries({ queryKey: ["expenses"] });
+      queryClient.invalidateQueries({ queryKey: ["expenseSummary"] });
+    },
     onError: (error) => toast.error(getErrorMessage(error))
   });
 
@@ -146,6 +159,35 @@ export function ExpensesPage() {
                     <Bar dataKey="amount" fill="var(--terracotta)" radius={[8, 8, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
+              </Card>
+
+              <Card>
+                <h2 className="font-serif text-3xl italic text-ink mb-4">Recent Expenses</h2>
+                <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 scrollbar-hide">
+                  {(expenses ?? []).map((exp: any) => (
+                    <div key={exp.id} className="group/expense relative flex items-center justify-between rounded-2xl border border-line bg-cream/70 px-4 py-3">
+                      <div>
+                        <p className="text-sm font-medium text-ink capitalize pr-8">{exp.category} <span className="font-normal text-ink/60 lowercase px-2">{exp.note && `· ${exp.note}`}</span></p>
+                        <p className="text-xs text-ink/50 mt-0.5">{dayjs(exp.date).format("MMM D, YYYY")}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-serif text-lg text-ink font-medium">₹{exp.amount}</p>
+                      </div>
+                      <button
+                        type="button"
+                        title="Delete expense"
+                        className="absolute right-[-10px] top-[-10px] bg-cream rounded-full border border-line p-1.5 text-terracotta/40 hover:text-terracotta hover:border-terracotta opacity-0 group-hover/expense:opacity-100 transition-all"
+                        onClick={async () => {
+                          if (await confirm({ title: "Delete expense", message: "Are you sure you want to delete this expense?" })) {
+                            deleteExpense.mutate(exp.id);
+                          }
+                        }}
+                      >
+                        <Trash size={14} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </Card>
             </>
           )}

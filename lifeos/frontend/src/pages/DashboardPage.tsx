@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import { Card } from "@/components/ui/Card";
@@ -20,7 +21,17 @@ type DashboardResponse = {
   habits: Array<{ id: string; name: string; logs: Array<{ id: string; date: string; completed: boolean }> }>;
 };
 
+function useCurrentTime() {
+  const [time, setTime] = useState(dayjs());
+  useEffect(() => {
+    const timer = setInterval(() => setTime(dayjs()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+  return time;
+}
+
 export function DashboardPage() {
+  const currentTime = useCurrentTime();
   const { data, error, isLoading } = useQuery({
     queryKey: ["dashboard"],
     queryFn: async () => (await api.get<DashboardResponse>("/dashboard")).data
@@ -56,8 +67,8 @@ export function DashboardPage() {
   return (
     <section className="mx-auto max-w-6xl space-y-6 px-4 py-8 md:px-8">
       <PageHeader
-        eyebrow={dayjs().format("MMMM journal")}
-        title={`Good ${dayjs().hour() < 12 ? "morning" : dayjs().hour() < 18 ? "afternoon" : "evening"}, ${data.greetingName} ✨`}
+        eyebrow={currentTime.format("dddd, MMMM D • h:mm A")}
+        title={`Good ${currentTime.hour() < 12 ? "morning" : currentTime.hour() < 18 ? "afternoon" : "evening"}, ${data.greetingName} ✨`}
         description="This dashboard uses only your real stored data. If a section is empty, it simply means you haven’t added anything there yet."
       />
 

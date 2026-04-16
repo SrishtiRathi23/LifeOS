@@ -2,6 +2,8 @@ import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { LineChart, Line, ResponsiveContainer, Tooltip } from "recharts";
 import toast from "react-hot-toast";
+import { Trash } from "lucide-react";
+import { useConfirm } from "@/contexts/ConfirmContext";
 import { api, getErrorMessage } from "@/utils/api";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -25,6 +27,7 @@ const timeframes: Goal["timeframe"][] = ["week", "month", "year", "life"];
 
 export function GoalsPage() {
   const queryClient = useQueryClient();
+  const confirm = useConfirm();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [timeframe, setTimeframe] = useState<Goal["timeframe"]>("month");
@@ -64,6 +67,15 @@ export function GoalsPage() {
   const updateProgress = useMutation({
     mutationFn: async ({ id, progress }: { id: string; progress: number }) => (await api.patch(`/goals/${id}/progress`, { progress })).data,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["goals"] }),
+    onError: (error) => toast.error(getErrorMessage(error))
+  });
+
+  const deleteGoal = useMutation({
+    mutationFn: async (id: string) => await api.delete(`/goals/${id}`),
+    onSuccess: () => {
+      toast.success("Goal deleted.");
+      queryClient.invalidateQueries({ queryKey: ["goals"] });
+    },
     onError: (error) => toast.error(getErrorMessage(error))
   });
 
@@ -119,11 +131,25 @@ export function GoalsPage() {
                   {group.items.map((goal) => (
                     <Card key={goal.id}>
                       <div className="flex items-start justify-between gap-4">
-                        <div>
-                          <h3 className="font-serif text-3xl italic text-ink">{goal.title}</h3>
+                        <div className="min-w-0 flex-1">
+                          <h3 className="font-serif text-3xl italic text-ink break-words">{goal.title}</h3>
                           <p className="mt-2 text-sm leading-6 text-ink/70">{goal.description || "No description yet."}</p>
                         </div>
-                        <span className="rounded-full bg-parchment px-3 py-1 text-xs capitalize text-terracotta">{goal.status}</span>
+                        <div className="flex items-center gap-3">
+                          <span className="rounded-full bg-parchment px-3 py-1 text-xs capitalize text-terracotta whitespace-nowrap">{goal.status}</span>
+                          <button
+                            type="button"
+                            className="opacity-0 group-hover/goal:opacity-100 transition-all text-terracotta hover:text-terracotta/80 p-1"
+                            onClick={async (e) => {
+                              e.stopPropagation();
+                              if (await confirm({ title: "Delete goal", message: "Are you sure you want to delete this goal?" })) {
+                                deleteGoal.mutate(goal.id);
+                              }
+                            }}
+                          >
+                            <Trash size={18} />
+                          </button>
+                        </div>
                       </div>
 
                       <div className="mt-5">

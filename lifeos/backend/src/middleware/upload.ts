@@ -21,8 +21,8 @@ function fileFilter(
   file: Express.Multer.File,
   cb: multer.FileFilterCallback
 ) {
-  if (!["image/jpeg", "image/png", "image/webp"].includes(file.mimetype)) {
-    cb(new ApiError(400, "Please upload a JPG, PNG, or WEBP image."));
+  if (!["image/jpeg", "image/png", "image/webp", "image/gif"].includes(file.mimetype)) {
+    cb(new ApiError(400, "Please upload a JPG, PNG, WEBP, or GIF image."));
     return;
   }
 
@@ -31,6 +31,6 @@ function fileFilter(
 
 export const upload = multer({
   storage,
-  limits: { fileSize: 5 * 1024 * 1024 },
+  limits: { fileSize: 10 * 1024 * 1024 },
   fileFilter
 });

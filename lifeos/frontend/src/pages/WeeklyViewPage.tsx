@@ -83,7 +83,7 @@ export function WeeklyViewPage() {
         actions={<PrintButton />}
       />
 
-      <div className="grid gap-4 lg:grid-cols-7">
+      <div className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-8 scrollbar-hide">
         {days.map((day) => {
           const iso = day.toISOString();
           const isToday = day.isSame(dayjs(), "day");
@@ -93,7 +93,8 @@ export function WeeklyViewPage() {
           return (
             <Card
               key={iso}
-              className={`flex min-h-64 flex-col gap-3 transition-all ${isToday ? "ring-2 ring-terracotta/60 ring-offset-1" : ""}`}
+              style={{ resize: "both" }}
+              className={`flex w-full shrink-0 snap-center flex-col gap-3 overflow-auto min-h-[300px] sm:w-[280px] md:w-[300px] transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:border-terracotta/30 ${isToday ? "ring-2 ring-terracotta/60 ring-offset-1" : ""}`}
             >
               {/* Day header */}
               <div className="flex items-start justify-between">
@@ -118,26 +119,36 @@ export function WeeklyViewPage() {
 
               {/* Inline add form */}
               {isAdding && (
-                <div className="flex gap-2">
+                <div className="flex flex-col gap-2 animate-in fade-in slide-in-from-top-2">
                   <Input
                     autoFocus
                     value={newTitle}
                     onChange={(e) => setNewTitle(e.target.value)}
-                    placeholder="Task title…"
-                    className="flex-1 py-1.5 text-sm"
+                    placeholder="Type task here…"
+                    className="w-full text-base"
                     onKeyDown={(e) => {
                       if (e.key === "Enter" && newTitle.trim()) createTask.mutate(day.startOf("day").toISOString());
                       if (e.key === "Escape") { setAddingDay(null); setNewTitle(""); }
                     }}
                   />
-                  <Button
-                    type="button"
-                    onClick={() => newTitle.trim() && createTask.mutate(day.startOf("day").toISOString())}
-                    disabled={!newTitle.trim() || createTask.isPending}
-                    className="px-3 py-1.5 text-sm"
-                  >
-                    Add
-                  </Button>
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setAddingDay(null)}
+                      className="px-3 py-1.5 text-xs text-ink/60"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={() => newTitle.trim() && createTask.mutate(day.startOf("day").toISOString())}
+                      disabled={!newTitle.trim() || createTask.isPending}
+                      className="px-4 py-1.5 text-xs"
+                    >
+                      Add Task
+                    </Button>
+                  </div>
                 </div>
               )}
 

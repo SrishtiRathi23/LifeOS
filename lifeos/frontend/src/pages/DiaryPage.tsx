@@ -11,8 +11,8 @@ import { Input, Textarea } from "@/components/ui/Input";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PrintButton } from "@/components/shared/PrintButton";
-import { useAutosave } from "@/hooks/useAutosave";
-
+import { Trash } from "lucide-react";
+import { useConfirm } from "@/contexts/ConfirmContext";
 type DiaryEntry = {
   id: string;
   date: string;
@@ -27,6 +27,7 @@ type DiaryEntry = {
 
 export function DiaryPage() {
   const queryClient = useQueryClient();
+  const confirm = useConfirm();
   const today = isoDay();
   const [content, setContent] = useState("");
   const [weather, setWeather] = useState("");
@@ -42,10 +43,19 @@ export function DiaryPage() {
   });
 
   useEffect(() => {
-    const current = entries?.find((entry) => entry.id === activeId) ?? entries?.find((entry) => dayjs(entry.date).isSame(today, "day"));
+    if (!activeId) {
+      setContent("");
+      setWeather("");
+      setTags("");
+      setGratitude(["", "", ""]);
+      setTomorrowPlan(["", "", "", "", ""]);
+      setMood(null);
+      return;
+    }
+
+    const current = entries?.find((entry) => entry.id === activeId);
 
     if (current) {
-      setActiveId(current.id);
       setContent(current.content);
       setWeather(current.weather ?? "");
       setTags(current.tags.join(" "));
@@ -59,7 +69,7 @@ export function DiaryPage() {
       ]);
       setMood(current.mood ?? null);
     }
-  }, [entries, activeId, today]);
+  }, [entries, activeId]);
 
   const saveEntry = useMutation({
     mutationFn: async () =>
@@ -77,8 +87,19 @@ export function DiaryPage() {
       ).data,
     onSuccess: () => {
       toast.success("Diary entry saved.");
+      setActiveId(null);
       queryClient.invalidateQueries({ queryKey: ["diaryEntries"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+    },
+    onError: (error) => toast.error(getErrorMessage(error))
+  });
+
+  const deleteEntry = useMutation({
+    mutationFn: async (id: string) => await api.delete(`/diary/${id}`),
+    onSuccess: () => {
+      toast.success("Diary entry deleted.");
+      queryClient.invalidateQueries({ queryKey: ["diaryEntries"] });
+      if (activeId) setActiveId(null);
     },
     onError: (error) => toast.error(getErrorMessage(error))
   });
@@ -92,16 +113,7 @@ export function DiaryPage() {
     onError: (error) => toast.error(getErrorMessage(error))
   });
 
-  useAutosave(
-    () => {
-      if (content.trim()) {
-        saveEntry.mutate();
-      }
-    },
-    [content, weather, tags, gratitude.join("|"), tomorrowPlan.join("|"), String(mood)],
-    500,
-    !!entries
-  );
+
 
   return (
     <section className="mx-auto max-w-7xl space-y-6 px-4 py-8 md:px-8">
@@ -127,15 +139,25 @@ export function DiaryPage() {
               <EmptyState title="No diary entries yet" description="Your journal index will begin once you save your first entry." />
             ) : (
               entries.map((entry) => (
-                <button
-                  key={entry.id}
-                  type="button"
-                  onClick={() => setActiveId(entry.id)}
-                  className={`w-full rounded-2xl border px-4 py-3 text-left ${activeId === entry.id ? "border-terracotta bg-parchment" : "border-line bg-cream/70"}`}
-                >
-                  <p className="font-medium text-ink">{prettyShortDate(entry.date)}</p>
-                  <p className="mt-1 line-clamp-2 text-sm text-ink/65" dangerouslySetInnerHTML={{ __html: entry.content }} />
-                </button>
+                <div key={entry.id} className={`group/diary relative flex w-full flex-col rounded-2xl border px-4 py-3 text-left ${activeId === entry.id ? "border-terracotta bg-parchment" : "border-line bg-cream/70"}`}>
+                  <button type="button" onClick={() => setActiveId(entry.id)} className="w-full text-left pr-6">
+                    <p className="font-medium text-ink">{prettyShortDate(entry.date)}</p>
+                    <p className="mt-1 line-clamp-2 text-sm text-ink/65" dangerouslySetInnerHTML={{ __html: entry.content }} />
+                  </button>
+                  <button
+                    type="button"
+                    title="Delete entry"
+                    className="absolute right-3 top-4 text-terracotta/40 hover:text-terracotta opacity-0 group-hover/diary:opacity-100 transition-all"
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      if (await confirm({ title: "Delete entry", message: "Are you sure you want to delete this diary entry?" })) {
+                        deleteEntry.mutate(entry.id);
+                      }
+                    }}
+                  >
+                    <Trash size={16} />
+                  </button>
+                </div>
               ))
             )}
           </div>

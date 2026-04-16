@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
+import { Trash } from "lucide-react";
+import { useConfirm } from "@/contexts/ConfirmContext";
 import { api, getErrorMessage } from "@/utils/api";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -12,6 +14,7 @@ const columns = ["shortlisted", "applied", "interviewing", "offer", "rejected"];
 
 export function InternshipsPage() {
   const queryClient = useQueryClient();
+  const confirm = useConfirm();
   const [company, setCompany] = useState("");
   const [role, setRole] = useState("");
   const [status, setStatus] = useState("applied");
@@ -52,6 +55,15 @@ export function InternshipsPage() {
     onError: (error) => toast.error(getErrorMessage(error))
   });
 
+  const deleteItem = useMutation({
+    mutationFn: async (id: string) => await api.delete(`/internships/${id}`),
+    onSuccess: () => {
+      toast.success("Application deleted.");
+      queryClient.invalidateQueries({ queryKey: ["internships"] });
+    },
+    onError: (error) => toast.error(getErrorMessage(error))
+  });
+
   return (
     <section className="mx-auto max-w-7xl space-y-6 px-4 py-8 md:px-8">
       <PageHeader eyebrow="Career pipeline" title="Internship Tracker" description="Your application board stays empty until you add real opportunities." />
@@ -79,9 +91,21 @@ export function InternshipsPage() {
               <h2 className="font-serif text-3xl italic capitalize text-ink">{column}</h2>
               <div className="mt-4 space-y-3">
                 {items.filter((item: any) => item.status === column).map((item: any) => (
-                  <div key={item.id} className="rounded-2xl border border-line bg-cream/70 p-4">
-                    <p className="font-medium text-ink">{item.company}</p>
+                  <div key={item.id} className="group/internship relative rounded-2xl border border-line bg-cream/70 p-4">
+                    <p className="font-medium text-ink pr-6">{item.company}</p>
                     <p className="text-sm text-ink/65">{item.role}</p>
+                    <button
+                      type="button"
+                      title="Delete application"
+                      className="absolute right-3 top-4 text-terracotta/40 hover:text-terracotta opacity-0 group-hover/internship:opacity-100 transition-all"
+                      onClick={async () => {
+                        if (await confirm({ title: "Delete application", message: "Are you sure you want to delete this application?" })) {
+                          deleteItem.mutate(item.id);
+                        }
+                      }}
+                    >
+                      <Trash size={16} />
+                    </button>
                     <div className="mt-3 flex flex-wrap gap-2">
                       {columns.filter((value) => value !== column).slice(0, 2).map((next) => (
                         <Button key={next} type="button" variant="secondary" className="px-3 py-2 text-xs" onClick={() => moveItem.mutate({ id: item.id, nextStatus: next })}>

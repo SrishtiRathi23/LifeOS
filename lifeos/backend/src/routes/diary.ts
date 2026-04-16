@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { z } from "zod";
+import rateLimit from "express-rate-limit";
 import { requireAuth } from "../middleware/auth.js";
 import { upload } from "../middleware/upload.js";
 import { validateBody, validateQuery } from "../middleware/validate.js";
@@ -116,7 +117,15 @@ router.delete("/:id", async (req, res) => {
   res.status(204).send();
 });
 
-router.post("/:id/ai-reflect", async (req, res) => {
+const diaryAILimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: "You have reached the hourly AI limit. Please try again later." }
+});
+
+router.post("/:id/ai-reflect", diaryAILimiter, async (req, res) => {
   const entryId = String(req.params.id);
   const entry = await prisma.diaryEntry.findFirst({
     where: { id: entryId, userId: req.user!.id }

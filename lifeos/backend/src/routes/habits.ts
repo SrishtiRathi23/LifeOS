@@ -64,4 +64,11 @@ router.post("/log", validateBody(z.object({ habitId: z.string(), date: z.string(
   res.status(201).json(log);
 });
 
+router.delete("/:id", async (req, res) => {
+  const id = String(req.params.id);
+  const deleted = await prisma.habit.deleteMany({ where: { id, userId: req.user!.id } });
+  if (deleted.count === 0) throw new ApiError(404, "Habit not found.");
+  res.status(204).send();
+});
+
 export default router;

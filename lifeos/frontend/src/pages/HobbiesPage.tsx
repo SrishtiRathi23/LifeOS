@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
+import { Trash } from "lucide-react";
+import { useConfirm } from "@/contexts/ConfirmContext";
 import { api, getErrorMessage } from "@/utils/api";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -10,9 +12,11 @@ import { PageHeader } from "@/components/shared/PageHeader";
 
 export function HobbiesPage() {
   const queryClient = useQueryClient();
+  const confirm = useConfirm();
   const [name, setName] = useState("");
   const [category, setCategory] = useState("creative");
   const [durations, setDurations] = useState<Record<string, string>>({});
+  const [durationUnits, setDurationUnits] = useState<Record<string, string>>({});
 
   const { data: hobbies } = useQuery({
     queryKey: ["hobbies"],
@@ -32,6 +36,15 @@ export function HobbiesPage() {
     mutationFn: async ({ hobbyId, duration }: { hobbyId: string; duration: number }) =>
       (await api.post("/hobbies/log", { hobbyId, date: new Date().toISOString(), duration })).data,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["hobbies"] }),
+    onError: (error) => toast.error(getErrorMessage(error))
+  });
+
+  const deleteHobby = useMutation({
+    mutationFn: async (id: string) => await api.delete(`/hobbies/${id}`),
+    onSuccess: () => {
+      toast.success("Hobby deleted.");
+      queryClient.invalidateQueries({ queryKey: ["hobbies"] });
+    },
     onError: (error) => toast.error(getErrorMessage(error))
   });
 
@@ -61,19 +74,43 @@ export function HobbiesPage() {
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
           {hobbies.map((hobby: any) => (
-            <Card key={hobby.id}>
-              <h3 className="font-serif text-3xl italic text-ink">{hobby.name}</h3>
-              <p className="mt-2 text-sm text-ink/65">{hobby.category}</p>
-              <div className="mt-4 flex gap-3">
+            <Card key={hobby.id} className="group/hobby relative">
+              <div className="pr-6">
+                <h3 className="font-serif text-3xl italic text-ink">{hobby.name}</h3>
+                <p className="mt-2 text-sm text-ink/65">{hobby.category}</p>
+              </div>
+              <button
+                type="button"
+                title="Delete hobby"
+                className="absolute right-3 top-4 text-terracotta/40 hover:text-terracotta opacity-0 group-hover/hobby:opacity-100 transition-all"
+                onClick={async () => (await confirm({ title: "Delete hobby", message: "Are you sure you want to delete this hobby?" })) && deleteHobby.mutate(hobby.id)}
+              >
+                <Trash size={16} />
+              </button>
+              <div className="mt-4 flex gap-2">
                 <Input
+                  className="flex-1"
                   value={durations[hobby.id] ?? ""}
                   onChange={(e) => setDurations((prev) => ({ ...prev, [hobby.id]: e.target.value }))}
-                  placeholder="Minutes enjoyed"
+                  placeholder="Time enjoyed"
                 />
+                <select
+                  value={durationUnits[hobby.id] ?? "mins"}
+                  onChange={(e) => setDurationUnits((prev) => ({ ...prev, [hobby.id]: e.target.value }))}
+                  className="w-[85px] rounded-2xl border border-line bg-cream px-2 py-3 text-sm text-ink outline-none"
+                >
+                  <option value="mins">mins</option>
+                  <option value="hrs">hrs</option>
+                </select>
                 <Button
                   type="button"
                   variant="secondary"
-                  onClick={() => durations[hobby.id] && addHobbyLog.mutate({ hobbyId: hobby.id, duration: Number(durations[hobby.id]) })}
+                  onClick={() => {
+                    if (!durations[hobby.id]) return;
+                    const val = Number(durations[hobby.id]);
+                    const duration = (durationUnits[hobby.id] ?? "mins") === "hrs" ? val * 60 : val;
+                    addHobbyLog.mutate({ hobbyId: hobby.id, duration });
+                  }}
                 >
                   Log
                 </Button>
@@ -81,7 +118,7 @@ export function HobbiesPage() {
               <div className="mt-4 space-y-2">
                 {(hobby.logs ?? []).slice(0, 5).map((log: any) => (
                   <div key={log.id} className="rounded-xl bg-cream/70 px-3 py-2 text-sm text-ink/70">
-                    {log.duration} min
+                    {log.duration >= 60 && log.duration % 60 === 0 ? `${log.duration / 60} hrs` : `${log.duration} mins`}
                   </div>
                 ))}
               </div>

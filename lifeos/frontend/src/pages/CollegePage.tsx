@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import toast from "react-hot-toast";
+import { Trash } from "lucide-react";
+import { useConfirm } from "@/contexts/ConfirmContext";
 import { api, getErrorMessage } from "@/utils/api";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -11,6 +13,7 @@ import { PageHeader } from "@/components/shared/PageHeader";
 
 export function CollegePage() {
   const queryClient = useQueryClient();
+  const confirm = useConfirm();
   const [subjectName, setSubjectName] = useState("");
   const [credits, setCredits] = useState("");
   const [semester, setSemester] = useState("");
@@ -77,6 +80,33 @@ export function CollegePage() {
     onError: (error) => toast.error(getErrorMessage(error))
   });
 
+  const deleteSubject = useMutation({
+    mutationFn: async (id: string) => await api.delete(`/college/subjects/${id}`),
+    onSuccess: () => {
+      toast.success("Subject deleted.");
+      queryClient.invalidateQueries({ queryKey: ["college"] });
+    },
+    onError: (error) => toast.error(getErrorMessage(error))
+  });
+
+  const deleteAssignment = useMutation({
+    mutationFn: async (id: string) => await api.delete(`/college/assignments/${id}`),
+    onSuccess: () => {
+      toast.success("Assignment deleted.");
+      queryClient.invalidateQueries({ queryKey: ["college"] });
+    },
+    onError: (error) => toast.error(getErrorMessage(error))
+  });
+
+  const deleteExam = useMutation({
+    mutationFn: async (id: string) => await api.delete(`/college/exams/${id}`),
+    onSuccess: () => {
+      toast.success("Exam deleted.");
+      queryClient.invalidateQueries({ queryKey: ["college"] });
+    },
+    onError: (error) => toast.error(getErrorMessage(error))
+  });
+
   return (
     <section className="mx-auto max-w-7xl space-y-6 px-4 py-8 md:px-8">
       <PageHeader eyebrow="Academic rhythm" title="College Tracker" description="Subjects, assignments, and exams appear only when you add your own academic data." />
@@ -125,9 +155,21 @@ export function CollegePage() {
             <h2 className="font-serif text-3xl italic text-ink">Subjects</h2>
             <div className="mt-4 space-y-3">
               {(data.subjects ?? []).map((subject: any) => (
-                <div key={subject.id} className="rounded-2xl border border-line bg-cream/70 px-4 py-3">
-                  <p className="text-sm text-ink">{subject.name}</p>
+                <div key={subject.id} className="group/subject relative rounded-2xl border border-line bg-cream/70 px-4 py-3">
+                  <p className="text-sm text-ink pr-6">{subject.name}</p>
                   <p className="text-xs text-ink/60">{subject.semester} · {subject.credits} credits</p>
+                  <button
+                    type="button"
+                    title="Delete subject"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-terracotta/40 hover:text-terracotta opacity-0 group-hover/subject:opacity-100 transition-all"
+                    onClick={async () => {
+                      if (await confirm({ title: "Delete subject", message: "Are you sure you want to delete this subject?" })) {
+                        deleteSubject.mutate(subject.id);
+                      }
+                    }}
+                  >
+                    <Trash size={16} />
+                  </button>
                 </div>
               ))}
             </div>
@@ -136,9 +178,21 @@ export function CollegePage() {
             <h2 className="font-serif text-3xl italic text-ink">Assignments</h2>
             <div className="mt-4 space-y-3">
               {(data.assignments ?? []).map((item: any) => (
-                <div key={item.id} className="rounded-2xl border border-line bg-cream/70 px-4 py-3">
-                  <p className="text-sm text-ink">{item.title}</p>
+                <div key={item.id} className="group/assignment relative rounded-2xl border border-line bg-cream/70 px-4 py-3">
+                  <p className="text-sm text-ink pr-6">{item.title}</p>
                   <p className="text-xs text-ink/60">{item.dueDate ? dayjs(item.dueDate).format("DD MMM") : "No date"} · {item.status}</p>
+                  <button
+                    type="button"
+                    title="Delete assignment"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-terracotta/40 hover:text-terracotta opacity-0 group-hover/assignment:opacity-100 transition-all"
+                    onClick={async () => {
+                      if (await confirm({ title: "Delete assignment", message: "Are you sure you want to delete this assignment?" })) {
+                        deleteAssignment.mutate(item.id);
+                      }
+                    }}
+                  >
+                    <Trash size={16} />
+                  </button>
                 </div>
               ))}
             </div>
@@ -147,9 +201,17 @@ export function CollegePage() {
             <h2 className="font-serif text-3xl italic text-ink">Exams</h2>
             <div className="mt-4 space-y-3">
               {(data.exams ?? []).map((item: any) => (
-                <div key={item.id} className="rounded-2xl border border-line bg-cream/70 px-4 py-3">
-                  <p className="text-sm text-ink">{item.type}</p>
+                <div key={item.id} className="group/exam relative rounded-2xl border border-line bg-cream/70 px-4 py-3">
+                  <p className="text-sm text-ink pr-6">{item.type}</p>
                   <p className="text-xs text-ink/60">{dayjs(item.date).format("DD MMM YYYY")}</p>
+                  <button
+                    type="button"
+                    title="Delete exam"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-terracotta/40 hover:text-terracotta opacity-0 group-hover/exam:opacity-100 transition-all"
+                    onClick={async () => (await confirm({ title: "Delete exam", message: "Are you sure you want to delete this exam?" })) && deleteExam.mutate(item.id)}
+                  >
+                    <Trash size={16} />
+                  </button>
                 </div>
               ))}
             </div>

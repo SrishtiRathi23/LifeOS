@@ -110,4 +110,25 @@ router.post("/exams", validateBody(examSchema), async (req, res) => {
   res.status(201).json(exam);
 });
 
+router.delete("/subjects/:id", async (req, res) => {
+  const id = String(req.params.id);
+  const deleted = await prisma.subject.deleteMany({ where: { id, userId: req.user!.id } });
+  if (deleted.count === 0) throw new ApiError(404, "Subject not found.");
+  res.status(204).send();
+});
+
+router.delete("/assignments/:id", async (req, res) => {
+  const id = String(req.params.id);
+  const deleted = await prisma.assignment.deleteMany({ where: { id, userId: req.user!.id } });
+  if (deleted.count === 0) throw new ApiError(404, "Assignment not found.");
+  res.status(204).send();
+});
+
+router.delete("/exams/:id", async (req, res) => {
+  const id = String(req.params.id);
+  const deleted = await prisma.exam.deleteMany({ where: { id, userId: req.user!.id } });
+  if (deleted.count === 0) throw new ApiError(404, "Exam not found.");
+  res.status(204).send();
+});
+
 export default router;

@@ -55,4 +55,11 @@ router.post("/log", validateBody(z.object({ hobbyId: z.string(), date: z.string(
   res.status(201).json(log);
 });
 
+router.delete("/:id", async (req, res) => {
+  const id = String(req.params.id);
+  const deleted = await prisma.hobby.deleteMany({ where: { id, userId: req.user!.id } });
+  if (deleted.count === 0) throw new ApiError(404, "Hobby not found.");
+  res.status(204).send();
+});
+
 export default router;

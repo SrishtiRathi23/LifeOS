@@ -80,4 +80,11 @@ router.patch("/:id", validateBody(internshipSchema.partial()), async (req, res) 
   res.json(item);
 });
 
+router.delete("/:id", async (req, res) => {
+  const id = String(req.params.id);
+  const deleted = await prisma.internship.deleteMany({ where: { id, userId: req.user!.id } });
+  if (deleted.count === 0) throw new ApiError(404, "Internship application not found.");
+  res.status(204).send();
+});
+
 export default router;

@@ -1,66 +1,46 @@
-import Anthropic from "@anthropic-ai/sdk";
 import Tesseract from "tesseract.js";
-import { env } from "./env.js";
-
-const anthropic = env.ANTHROPIC_API_KEY ? new Anthropic({ apiKey: env.ANTHROPIC_API_KEY }) : null;
-
-const NOTEBOOK_PROMPT = `You are a task parser. The user has uploaded a photo of their handwritten notebook or to-do list.
-Extract all tasks, deadlines, assignment names, exam dates, ideas, and notes visible in the image.
-Return ONLY valid JSON in this exact format:
-{
-  "tasks": [{ "title": "string", "deadline": "string|null", "category": "string", "priority": "high|medium|low" }],
-  "ideas": ["string"],
-  "notes": "string",
-  "exams": [{ "subject": "string", "date": "string" }]
-}
-Categories: college, personal, learning, health, finance, other.
-For dates, use ISO format if possible, otherwise keep original text.`;
 
 export async function parseNotebookImage(filePath: string, mimeType: string, base64Data: string) {
-  if (anthropic) {
-    const mediaType = ["image/jpeg", "image/png", "image/webp", "image/gif"].includes(mimeType)
-      ? (mimeType as "image/jpeg" | "image/png" | "image/webp" | "image/gif")
-      : "image/jpeg";
-
-    const response = await anthropic.messages.create({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 1200,
-      system: NOTEBOOK_PROMPT,
-      messages: [
-        {
-          role: "user",
-          content: [
-            {
-              type: "image",
-              source: {
-                type: "base64",
-                media_type: mediaType,
-                data: base64Data
-              }
-            },
-            {
-              type: "text",
-              text: "Parse this notebook page and return JSON only."
-            }
-          ]
-        }
-      ]
-    });
-
-    const textBlock = response.content.find((block) => block.type === "text");
-    return JSON.parse(textBlock?.text ?? "{}");
-  }
-
   const ocr = await Tesseract.recognize(filePath, "eng");
-  const lines = ocr.data.text.split("\n").map((line) => line.trim()).filter(Boolean);
+  
+  // Clean and structure tasks
+  const lines = ocr.data.text
+    .split("\n")
+    .map((line) => line.replace(/^[-*[\]\d.\s]+/, "").trim())
+    .filter(Boolean);
+
+  const tasks = lines.slice(0, 15).map((line) => {
+    let priority: "high" | "medium" | "low" = "low";
+    let category = "other";
+    const lower = line.toLowerCase();
+    
+    // 100% free rule-based basic logic mapping
+    if (lower.includes("exam") || lower.includes("test")) {
+      priority = "high";
+      category = "college";
+    } else if (lower.includes("hackathon")) {
+      priority = "high";
+      category = "learning";
+    } else if (lower.includes("assignment") || lower.includes("homework")) {
+      priority = "medium";
+      category = "college";
+    } else if (lower.includes("internship")) {
+      priority = "medium";
+      category = "career";
+    }
+
+    return { title: line, deadline: null, category, priority };
+  });
+
+  // Sort by priority map (exams = 1, hackathon = 2, assignments = 3, etc)
+  tasks.sort((a, b) => {
+    const scoreA = a.priority === "high" ? 1 : a.priority === "medium" ? 2 : 3;
+    const scoreB = b.priority === "high" ? 1 : b.priority === "medium" ? 2 : 3;
+    return scoreA - scoreB;
+  });
 
   return {
-    tasks: lines.slice(0, 12).map((line) => ({
-      title: line.replace(/^[-*[\]\d.\s]+/, "").trim(),
-      deadline: null,
-      category: "other",
-      priority: "medium"
-    })),
+    tasks,
     ideas: [],
     notes: ocr.data.text.trim(),
     exams: []
@@ -68,22 +48,14 @@ export async function parseNotebookImage(filePath: string, mimeType: string, bas
 }
 
 export async function reflectOnDiaryEntry(entry: string, name: string) {
-  if (anthropic) {
-    const prompt = `You are a kind, warm journaling companion for a college student named ${name}.
-Read their diary entry and write a short, genuine 2-3 sentence reflection.
-Be encouraging but honest. Notice patterns, celebrate small wins, gently acknowledge struggles.
-Sound like a wise supportive friend, not a therapist. Keep it under 80 words.`;
-
-    const response = await anthropic.messages.create({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 180,
-      system: prompt,
-      messages: [{ role: "user", content: entry }]
-    });
-
-    const textBlock = response.content.find((block) => block.type === "text");
-    return textBlock?.text?.trim() ?? "";
+  const lower = entry.toLowerCase();
+  
+  // Rule-based daily reflection templates
+  if (lower.includes("sad") || lower.includes("hard") || lower.includes("tired") || lower.includes("stressed")) {
+    return `I can hear that things felt a bit heavy, ${name}. It's perfectly okay to feel tired and take a step back. Your persistence matters more than immediate perfection.`;
+  } else if (lower.includes("happy") || lower.includes("excited") || lower.includes("win") || lower.includes("finished")) {
+    return `That sounds like a productive and positive day, ${name}! Celebrate those wins, both big and small. You're building incredible momentum!`;
   }
-
-  return "You showed up honestly today, and that matters more than having a perfect day. There is real effort in your words, and even the unfinished parts still count as progress you can build on tomorrow.";
+  
+  return `You showed up honestly today, ${name}, and that matters more than having a perfect day. There is real effort in your words, and even the unfinished parts still count as progress you can build on tomorrow.`;
 }

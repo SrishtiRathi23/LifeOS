@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import toast from "react-hot-toast";
+import { Trash } from "lucide-react";
+import { useConfirm } from "@/contexts/ConfirmContext";
 import { api, getErrorMessage } from "@/utils/api";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -11,6 +13,7 @@ import { PageHeader } from "@/components/shared/PageHeader";
 
 export function HackathonsPage() {
   const queryClient = useQueryClient();
+  const confirm = useConfirm();
   const [name, setName] = useState("");
   const [mode, setMode] = useState("");
   const [theme, setTheme] = useState("");
@@ -44,6 +47,15 @@ export function HackathonsPage() {
     onError: (error) => toast.error(getErrorMessage(error))
   });
 
+  const deleteItem = useMutation({
+    mutationFn: async (id: string) => await api.delete(`/hackathons/${id}`),
+    onSuccess: () => {
+      toast.success("Hackathon deleted.");
+      queryClient.invalidateQueries({ queryKey: ["hackathons"] });
+    },
+    onError: (error) => toast.error(getErrorMessage(error))
+  });
+
   return (
     <section className="mx-auto max-w-6xl space-y-6 px-4 py-8 md:px-8">
       <PageHeader eyebrow="Build in public" title="Hackathon Tracker" description="Track only the hackathons you actually join, plan, or submit to." />
@@ -72,9 +84,25 @@ export function HackathonsPage() {
         <div className="grid gap-4 md:grid-cols-2">
           {items.map((item: any) => (
             <Card key={item.id}>
-              <div className="flex items-center justify-between">
-                <h3 className="font-serif text-3xl italic text-ink">{item.name}</h3>
-                <span className="rounded-full bg-parchment px-3 py-1 text-xs capitalize text-terracotta">{item.status}</span>
+              <div className="flex items-center justify-between gap-4">
+                <div className="min-w-0 flex-1">
+                  <h3 className="font-serif text-3xl italic text-ink break-words">{item.name}</h3>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="rounded-full bg-parchment px-3 py-1 text-xs capitalize text-terracotta whitespace-nowrap">{item.status}</span>
+                  <button
+                    type="button"
+                    title="Delete hackathon"
+                    className="absolute right-3 top-4 text-terracotta/40 hover:text-terracotta opacity-0 group-hover/hackathon:opacity-100 transition-all"
+                    onClick={async () => {
+                      if (await confirm({ title: "Delete hackathon", message: "Are you sure you want to delete this hackathon?" })) {
+                        deleteItem.mutate(item.id);
+                      }
+                    }}
+                  >
+                    <Trash size={18} />
+                  </button>
+                </div>
               </div>
               <p className="mt-2 text-sm text-ink/65">{item.mode || "No mode"} · {item.theme || "No theme"}</p>
               <p className="mt-3 text-sm leading-6 text-ink/70">{item.idea || "No idea notes yet."}</p>

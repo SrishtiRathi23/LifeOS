@@ -69,4 +69,11 @@ router.post("/:id/study-log", validateBody(z.object({ date: z.string().datetime(
   res.status(201).json(log);
 });
 
+router.delete("/:id", async (req, res) => {
+  const id = String(req.params.id);
+  const deleted = await prisma.learningResource.deleteMany({ where: { id, userId: req.user!.id } });
+  if (deleted.count === 0) throw new ApiError(404, "Learning resource not found.");
+  res.status(204).send();
+});
+
 export default router;
