@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { usePersistentState } from "@/hooks/usePersistentState";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import toast from "react-hot-toast";
@@ -14,13 +15,13 @@ import { PageHeader } from "@/components/shared/PageHeader";
 export function CollegePage() {
   const queryClient = useQueryClient();
   const confirm = useConfirm();
-  const [subjectName, setSubjectName] = useState("");
-  const [credits, setCredits] = useState("");
-  const [semester, setSemester] = useState("");
-  const [assignmentTitle, setAssignmentTitle] = useState("");
-  const [assignmentSubjectId, setAssignmentSubjectId] = useState("");
-  const [examType, setExamType] = useState("");
-  const [examSubjectId, setExamSubjectId] = useState("");
+  const [subjectName, setSubjectName] = usePersistentState("lifeos_coll_subj", "");
+  const [credits, setCredits] = usePersistentState("lifeos_coll_cred", "");
+  const [semester, setSemester] = usePersistentState("lifeos_coll_sem", "");
+  const [assignmentTitle, setAssignmentTitle] = usePersistentState("lifeos_coll_asgn_t", "");
+  const [assignmentSubjectId, setAssignmentSubjectId] = usePersistentState("lifeos_coll_asgn_s", "");
+  const [examType, setExamType] = usePersistentState("lifeos_coll_exam_t", "");
+  const [examSubjectId, setExamSubjectId] = usePersistentState("lifeos_coll_exam_s", "");
 
   const { data } = useQuery({
     queryKey: ["college"],

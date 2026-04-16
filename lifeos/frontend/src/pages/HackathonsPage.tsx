@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { usePersistentState } from "@/hooks/usePersistentState";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import toast from "react-hot-toast";
@@ -14,11 +15,11 @@ import { PageHeader } from "@/components/shared/PageHeader";
 export function HackathonsPage() {
   const queryClient = useQueryClient();
   const confirm = useConfirm();
-  const [name, setName] = useState("");
-  const [mode, setMode] = useState("");
-  const [theme, setTheme] = useState("");
-  const [status, setStatus] = useState("planning");
-  const [idea, setIdea] = useState("");
+  const [name, setName] = usePersistentState("lifeos_hack_name", "");
+  const [mode, setMode] = usePersistentState("lifeos_hack_mode", "");
+  const [theme, setTheme] = usePersistentState("lifeos_hack_theme", "");
+  const [status, setStatus] = usePersistentState("lifeos_hack_stat", "planning");
+  const [idea, setIdea] = usePersistentState("lifeos_hack_idea", "");
 
   const { data: items } = useQuery({
     queryKey: ["hackathons"],

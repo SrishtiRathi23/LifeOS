@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 enum TaskCategory {
@@ -247,7 +248,7 @@ model GoalSnapshot {
 model VisionImage {
   id          String   @id @default(cuid())
   userId      String
-  filename    String   @default("dummy.jpg")
+  imageUrl    String   @default("")
   title       String?
   affirmation String?
   category    String   @default("Other")

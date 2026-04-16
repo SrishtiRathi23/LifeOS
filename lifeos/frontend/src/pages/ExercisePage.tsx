@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { usePersistentState } from "@/hooks/usePersistentState";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import toast from "react-hot-toast";
@@ -14,11 +15,11 @@ import { PageHeader } from "@/components/shared/PageHeader";
 export function ExercisePage() {
   const queryClient = useQueryClient();
   const confirm = useConfirm();
-  const [type, setType] = useState("walk");
-  const [duration, setDuration] = useState("");
-  const [durationUnit, setDurationUnit] = useState("mins");
-  const [intensity, setIntensity] = useState("3");
-  const [notes, setNotes] = useState("");
+  const [type, setType] = usePersistentState("lifeos_ex_type", "walk");
+  const [duration, setDuration] = usePersistentState("lifeos_ex_dur", "");
+  const [durationUnit, setDurationUnit] = usePersistentState("lifeos_ex_dur_u", "mins");
+  const [intensity, setIntensity] = usePersistentState("lifeos_ex_int", "3");
+  const [notes, setNotes] = usePersistentState("lifeos_ex_notes", "");
 
   const { data: logs } = useQuery({
     queryKey: ["exercise"],

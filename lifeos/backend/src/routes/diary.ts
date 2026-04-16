@@ -6,7 +6,7 @@ import { upload } from "../middleware/upload.js";
 import { validateBody, validateQuery } from "../middleware/validate.js";
 import { prisma } from "../utils/db.js";
 import { reflectOnDiaryEntry } from "../utils/claudeClient.js";
-import { sanitizePlainText, sanitizeRichText } from "../utils/sanitize.js";
+import { sanitize, sanitizePlainText, sanitizeRichText } from "../utils/sanitize.js";
 import { ApiError } from "../middleware/errorHandler.js";
 
 const router = Router();
@@ -57,8 +57,8 @@ router.post("/", validateBody(diarySchema), async (req, res) => {
       content: sanitizeRichText(payload.content),
       mood: payload.mood,
       weather: payload.weather ? sanitizePlainText(payload.weather) : null,
-      gratitude: payload.gratitude,
-      tomorrowPlan: payload.tomorrowPlan,
+      gratitude: payload.gratitude.map(sanitizePlainText),
+      tomorrowPlan: payload.tomorrowPlan.map(sanitizePlainText),
       tags: payload.tags.map(sanitizePlainText),
       photos: payload.photos
     },
@@ -68,8 +68,8 @@ router.post("/", validateBody(diarySchema), async (req, res) => {
       content: sanitizeRichText(payload.content),
       mood: payload.mood,
       weather: payload.weather ? sanitizePlainText(payload.weather) : null,
-      gratitude: payload.gratitude,
-      tomorrowPlan: payload.tomorrowPlan,
+      gratitude: payload.gratitude.map(sanitizePlainText),
+      tomorrowPlan: payload.tomorrowPlan.map(sanitizePlainText),
       tags: payload.tags.map(sanitizePlainText),
       photos: payload.photos
     }
@@ -95,8 +95,8 @@ router.patch("/:id", validateBody(diarySchema.partial()), async (req, res) => {
       content: payload.content ? sanitizeRichText(payload.content) : undefined,
       mood: payload.mood,
       weather: payload.weather ? sanitizePlainText(payload.weather) : payload.weather,
-      gratitude: payload.gratitude,
-      tomorrowPlan: payload.tomorrowPlan,
+      gratitude: payload.gratitude?.map(sanitizePlainText),
+      tomorrowPlan: payload.tomorrowPlan?.map(sanitizePlainText),
       tags: payload.tags?.map(sanitizePlainText),
       photos: payload.photos
     }

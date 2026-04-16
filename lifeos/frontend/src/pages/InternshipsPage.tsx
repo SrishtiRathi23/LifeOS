@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { usePersistentState } from "@/hooks/usePersistentState";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { Trash } from "lucide-react";
@@ -15,11 +16,11 @@ const columns = ["shortlisted", "applied", "interviewing", "offer", "rejected"];
 export function InternshipsPage() {
   const queryClient = useQueryClient();
   const confirm = useConfirm();
-  const [company, setCompany] = useState("");
-  const [role, setRole] = useState("");
-  const [status, setStatus] = useState("applied");
-  const [location, setLocation] = useState("");
-  const [notes, setNotes] = useState("");
+  const [company, setCompany] = usePersistentState("lifeos_int_comp", "");
+  const [role, setRole] = usePersistentState("lifeos_int_role", "");
+  const [status, setStatus] = usePersistentState("lifeos_int_stat", "applied");
+  const [location, setLocation] = usePersistentState("lifeos_int_loc", "");
+  const [notes, setNotes] = usePersistentState("lifeos_int_notes", "");
 
   const { data: items } = useQuery({
     queryKey: ["internships"],

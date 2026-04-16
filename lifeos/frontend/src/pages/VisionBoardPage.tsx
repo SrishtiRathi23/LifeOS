@@ -19,7 +19,8 @@ const getRotation = (seed: string | number) => {
 };
 
 // Base URL helper
-const getImageUrl = (filename: string) => `http://localhost:4000/uploads/${filename}`;
+// No-op helper for Cloudinary URLs which are already absolute
+const getImageUrl = (url: string) => url;
 
 function BoardSettingsPanel() {
   const { settings, saveSettings, isSettingsOpen, setSettingsOpen } = useVisionStore();
@@ -281,7 +282,7 @@ function BoardManageView() {
         {images.map((img) => (
           <div key={img.id} className="group flex flex-col overflow-hidden rounded-2xl border border-line bg-white shadow-sm transition-all hover:shadow-md">
             <div className="relative aspect-square w-full bg-cream/50">
-              <img src={getImageUrl(img.filename)} alt={img.title || "Vision"} className="absolute inset-0 h-full w-full object-cover" />
+              <img src={getImageUrl(img.imageUrl)} alt={img.title || "Vision"} className="absolute inset-0 h-full w-full object-cover" />
               <div className="absolute inset-0 flex items-center justify-center bg-ink/60 opacity-0 transition-opacity group-hover:opacity-100">
                 <label className="cursor-pointer rounded-full bg-white px-4 py-2 text-xs font-semibold text-ink shadow-lg hover:scale-105 transition-transform">
                   Replace
@@ -365,7 +366,7 @@ function BoardCollageView() {
                   transform: `rotate(${getRotation(img.id)}deg)` 
                 }}
               >
-                <img src={getImageUrl(img.filename)} alt="" className="aspect-square w-full object-cover" style={filterStyle} />
+                <img src={getImageUrl(img.imageUrl)} alt="" className="aspect-square w-full object-cover" style={filterStyle} />
                 <p className="absolute bottom-4 left-6 right-6 text-center font-script text-xl text-ink leading-tight">{img.title}</p>
                 
                 {/* Hover Reveal Card */}
@@ -383,7 +384,7 @@ function BoardCollageView() {
           <div className="columns-2 sm:columns-3 lg:columns-4 gap-4 space-y-4">
             {images.map((img) => (
               <div key={img.id} className="group relative break-inside-avoid overflow-hidden rounded-xl shadow-md transition-all hover:shadow-xl">
-                <img src={getImageUrl(img.filename)} alt="" className="w-full object-cover block" style={filterStyle} />
+                <img src={getImageUrl(img.imageUrl)} alt="" className="w-full object-cover block" style={filterStyle} />
                 <div className="absolute inset-x-0 bottom-0 translate-y-full bg-gradient-to-t from-ink/90 to-transparent p-5 pb-4 transition-transform duration-300 group-hover:translate-y-0">
                   <p className="font-serif text-lg italic text-white">{img.title}</p>
                   <p className="mt-1 text-xs text-white/80 line-clamp-2">{img.affirmation}</p>
@@ -397,7 +398,7 @@ function BoardCollageView() {
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
             {images.map((img) => (
               <div key={img.id} className={`group relative overflow-hidden bg-white shadow-sm transition-all hover:shadow-lg ${settings.frameStyle === 'rounded' ? 'rounded-2xl' : settings.frameStyle === 'thin' ? 'border-[3px] border-white' : ''}`}>
-                <img src={getImageUrl(img.filename)} alt="" className="aspect-square w-full object-cover" style={filterStyle} />
+                <img src={getImageUrl(img.imageUrl)} alt="" className="aspect-square w-full object-cover" style={filterStyle} />
                 <div className="absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-ink/80 via-transparent to-transparent p-4 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
                   <p className="font-serif text-white">{img.title}</p>
                 </div>
@@ -414,7 +415,7 @@ function BoardCollageView() {
                 <div className="absolute -top-6 left-0 right-0 h-4 flex justify-between px-2">
                   {[...Array(6)].map((_, i) => <div key={i} className="h-4 w-4 rounded-sm bg-cream"></div>)}
                 </div>
-                <img src={getImageUrl(img.filename)} alt="" className="h-full w-auto object-cover opacity-90 sepia-[.3]" style={filterStyle} />
+                <img src={getImageUrl(img.imageUrl)} alt="" className="h-full w-auto object-cover opacity-90 sepia-[.3]" style={filterStyle} />
                 <div className="absolute -bottom-6 left-0 right-0 h-4 flex justify-between px-2">
                   {[...Array(6)].map((_, i) => <div key={i} className="h-4 w-4 rounded-sm bg-cream"></div>)}
                 </div>
@@ -432,7 +433,7 @@ function BoardCollageView() {
            <div className="columns-1 sm:columns-2 lg:columns-3 gap-6 space-y-6">
             {images.map((img) => (
               <div key={img.id} className="group relative break-inside-avoid shadow-lg bg-white p-2">
-                <img src={getImageUrl(img.filename)} alt="" className="w-full object-cover grayscale-[0.2] contrast-125" style={filterStyle} />
+                <img src={getImageUrl(img.imageUrl)} alt="" className="w-full object-cover grayscale-[0.2] contrast-125" style={filterStyle} />
                 <div className="p-4 bg-white border-t border-line/30">
                   <h3 className="font-serif text-2xl font-bold uppercase tracking-widest text-ink">{img.title}</h3>
                   <p className="mt-2 text-xs italic leading-relaxed text-ink/70">{img.affirmation}</p>

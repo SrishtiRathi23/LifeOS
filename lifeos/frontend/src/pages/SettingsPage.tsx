@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { useConfirm } from "@/contexts/ConfirmContext";
 import { themeOptions, useThemeStore } from "@/store/themeStore";
 import { useAutosave } from "@/hooks/useAutosave";
 
@@ -18,6 +19,7 @@ type SettingsResponse = {
 
 export function SettingsPage() {
   const queryClient = useQueryClient();
+  const confirm = useConfirm();
   const { setTheme } = useThemeStore();
   const [name, setName] = useState("");
   const [college, setCollege] = useState("");
@@ -25,6 +27,10 @@ export function SettingsPage() {
   const [branch, setBranch] = useState("");
   const [currency, setCurrency] = useState("INR");
   const [firstDayOfWeek, setFirstDayOfWeek] = useState("monday");
+
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState("");
+  const [deletePassword, setDeletePassword] = useState("");
 
   const { data } = useQuery({
     queryKey: ["settings"],
@@ -87,6 +93,16 @@ export function SettingsPage() {
     onError: (error) => toast.error(getErrorMessage(error))
   });
 
+  const deleteAccount = useMutation({
+    mutationFn: async () => await api.delete("/auth/account", { data: { password: deletePassword } }),
+    onSuccess: () => {
+      toast.success("Account deleted successfully.");
+      queryClient.setQueryData(["session"], null);
+      window.location.href = "/";
+    },
+    onError: (error) => toast.error(getErrorMessage(error))
+  });
+
   return (
     <section className="mx-auto max-w-6xl space-y-6 px-4 py-8 md:px-8">
       <PageHeader
@@ -141,6 +157,61 @@ export function SettingsPage() {
               <span className="mt-3 block text-sm text-ink">{option.label}</span>
             </button>
           ))}
+        </div>
+      </Card>
+
+      <Card className="border-red-200">
+        <h2 className="font-serif text-3xl italic text-red-600">Danger Zone</h2>
+        <p className="mt-2 text-sm text-ink/70">
+          Once you delete your account, there is no going back. All your data, uploads, images, habits, goals, and tasks will be permanently erased from the server.
+        </p>
+        <div className="mt-4">
+          {!isDeleting ? (
+            <Button
+              type="button"
+              className="bg-red-600 font-semibold hover:bg-red-700 text-white border-transparent"
+              onClick={() => setIsDeleting(true)}
+            >
+              Delete Account
+            </Button>
+          ) : (
+            <div className="space-y-3 rounded-2xl bg-white/50 p-4 border border-red-200 shadow-inner">
+              <p className="text-sm font-medium text-red-700">Please confirm your identity and intent:</p>
+              <Input
+                type="password"
+                placeholder="Enter your password"
+                value={deletePassword}
+                onChange={(e) => setDeletePassword(e.target.value)}
+              />
+              <Input
+                type="text"
+                placeholder="Type DELETE to confirm"
+                value={deleteConfirmation}
+                onChange={(e) => setDeleteConfirmation(e.target.value)}
+              />
+              <div className="flex gap-2 pt-2">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => {
+                    setIsDeleting(false);
+                    setDeleteConfirmation("");
+                    setDeletePassword("");
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  className="bg-red-600 hover:bg-red-700 text-white border-transparent"
+                  disabled={deleteConfirmation !== "DELETE" || !deletePassword || deleteAccount.isPending}
+                  onClick={() => deleteAccount.mutate()}
+                >
+                  {deleteAccount.isPending ? "Deleting..." : "Permanently Delete"}
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       </Card>
     </section>

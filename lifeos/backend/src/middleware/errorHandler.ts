@@ -1,5 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 import { ZodError } from "zod";
+import { logger } from "../lib/logger.js";
 
 export class ApiError extends Error {
   statusCode: number;
@@ -22,7 +23,11 @@ export function errorHandler(error: unknown, _req: Request, res: Response, _next
     return res.status(error.statusCode).json({ message: error.message });
   }
 
-  console.error(error);
+  if ((error as any).code === "LIMIT_FILE_SIZE") {
+    return res.status(400).json({ message: "File too large (max 10MB)" });
+  }
+
+  logger.error(error);
   return res.status(500).json({
     message: "Something went wrong on our side. Please try again."
   });

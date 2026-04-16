@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
+import { usePersistentState } from "@/hooks/usePersistentState";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import toast from "react-hot-toast";
@@ -14,9 +15,9 @@ import { PageHeader } from "@/components/shared/PageHeader";
 export function WellnessPage() {
   const queryClient = useQueryClient();
   const confirm = useConfirm();
-  const [name, setName] = useState("");
-  const [category, setCategory] = useState("wellness");
-  const [targetDays, setTargetDays] = useState("7");
+  const [name, setName] = usePersistentState("lifeos_well_name", "");
+  const [category, setCategory] = usePersistentState("lifeos_well_cat", "wellness");
+  const [targetDays, setTargetDays] = usePersistentState("lifeos_well_td", "7");
 
   const { data: habits } = useQuery({
     queryKey: ["habits"],

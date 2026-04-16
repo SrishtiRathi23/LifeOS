@@ -112,40 +112,6 @@ router.delete("/:id", async (req, res) => {
   res.status(204).send();
 });
 
-router.post("/parse-image", upload.single("image"), async (req, res) => {
-  if (!req.file) {
-    res.status(400).json({ message: "Please upload a notebook image first." });
-    return;
-  }
 
-  const buffer = await fs.readFile(req.file.path);
-  const parsed = await parseNotebookImage(req.file.path, req.file.mimetype, buffer.toString("base64"));
-
-  res.json({
-    source: req.file.filename,
-    parsed
-  });
-});
-
-router.post("/parse-text", validateBody(z.object({ text: z.string().min(1) })), async (req, res) => {
-  const lines = req.body.text
-    .split("\n")
-    .map((line: string) => line.trim())
-    .filter(Boolean);
-
-  res.json({
-    parsed: {
-      tasks: lines.map((line: string, index: number) => ({
-        title: sanitizePlainText(line),
-        deadline: null,
-        category: index < 3 ? "college" : "other",
-        priority: index < 3 ? "high" : "medium"
-      })),
-      ideas: [],
-      notes: req.body.text,
-      exams: []
-    }
-  });
-});
 
 export default router;

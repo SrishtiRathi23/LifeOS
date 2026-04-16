@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { usePersistentState } from "@/hooks/usePersistentState";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { Trash } from "lucide-react";
@@ -13,12 +14,12 @@ import { PageHeader } from "@/components/shared/PageHeader";
 export function LearningPage() {
   const queryClient = useQueryClient();
   const confirm = useConfirm();
-  const [title, setTitle] = useState("");
-  const [platform, setPlatform] = useState("");
-  const [category, setCategory] = useState("web_dev");
-  const [progress, setProgress] = useState("0");
-  const [studyHours, setStudyHours] = useState<Record<string, string>>({});
-  const [studyUnits, setStudyUnits] = useState<Record<string, string>>({});
+  const [title, setTitle] = usePersistentState("lifeos_lrn_title", "");
+  const [platform, setPlatform] = usePersistentState("lifeos_lrn_plat", "");
+  const [category, setCategory] = usePersistentState("lifeos_lrn_cat", "web_dev");
+  const [progress, setProgress] = usePersistentState("lifeos_lrn_prog", "0");
+  const [studyHours, setStudyHours] = usePersistentState<Record<string, string>>("lifeos_lrn_hrs", {});
+  const [studyUnits, setStudyUnits] = usePersistentState<Record<string, string>>("lifeos_lrn_units", {});
 
   const { data: resources } = useQuery({
     queryKey: ["learning"],

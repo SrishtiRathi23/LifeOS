@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { usePersistentState } from "@/hooks/usePersistentState";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { Trash } from "lucide-react";
@@ -13,10 +14,10 @@ import { PageHeader } from "@/components/shared/PageHeader";
 export function HobbiesPage() {
   const queryClient = useQueryClient();
   const confirm = useConfirm();
-  const [name, setName] = useState("");
-  const [category, setCategory] = useState("creative");
-  const [durations, setDurations] = useState<Record<string, string>>({});
-  const [durationUnits, setDurationUnits] = useState<Record<string, string>>({});
+  const [name, setName] = usePersistentState("lifeos_hob_name", "");
+  const [category, setCategory] = usePersistentState("lifeos_hob_cat", "creative");
+  const [durations, setDurations] = usePersistentState<Record<string, string>>("lifeos_hob_dur", {});
+  const [durationUnits, setDurationUnits] = usePersistentState<Record<string, string>>("lifeos_hob_unit", {});
 
   const { data: hobbies } = useQuery({
     queryKey: ["hobbies"],

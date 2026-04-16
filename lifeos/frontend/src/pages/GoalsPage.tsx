@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
+import { usePersistentState } from "@/hooks/usePersistentState";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { LineChart, Line, ResponsiveContainer, Tooltip } from "recharts";
 import toast from "react-hot-toast";
@@ -28,11 +29,11 @@ const timeframes: Goal["timeframe"][] = ["week", "month", "year", "life"];
 export function GoalsPage() {
   const queryClient = useQueryClient();
   const confirm = useConfirm();
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [timeframe, setTimeframe] = useState<Goal["timeframe"]>("month");
-  const [category, setCategory] = useState("");
-  const [why, setWhy] = useState("");
+  const [title, setTitle] = usePersistentState("lifeos_goal_title", "");
+  const [description, setDescription] = usePersistentState("lifeos_goal_desc", "");
+  const [timeframe, setTimeframe] = usePersistentState<Goal["timeframe"]>("lifeos_goal_timeframe", "month");
+  const [category, setCategory] = usePersistentState("lifeos_goal_category", "");
+  const [why, setWhy] = usePersistentState("lifeos_goal_why", "");
 
   const { data: goals } = useQuery({
     queryKey: ["goals"],

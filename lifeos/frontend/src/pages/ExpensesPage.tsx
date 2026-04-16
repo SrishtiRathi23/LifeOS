@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { usePersistentState } from "@/hooks/usePersistentState";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from "recharts";
 import dayjs from "dayjs";
@@ -18,12 +19,12 @@ const chartColors = ["#C4956A", "#A8B89A", "#D4A5A0", "#8B5E3C", "#E8C4A0", "#3D
 export function ExpensesPage() {
   const queryClient = useQueryClient();
   const confirm = useConfirm();
-  const [amount, setAmount] = useState("");
-  const [category, setCategory] = useState("food");
-  const [note, setNote] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState("");
-  const [budget, setBudget] = useState("");
-  const [savingsGoal, setSavingsGoal] = useState("");
+  const [amount, setAmount] = usePersistentState("lifeos_exp_amt", "");
+  const [category, setCategory] = usePersistentState("lifeos_exp_cat", "food");
+  const [note, setNote] = usePersistentState("lifeos_exp_note", "");
+  const [paymentMethod, setPaymentMethod] = usePersistentState("lifeos_exp_pay", "");
+  const [budget, setBudget] = usePersistentState("lifeos_exp_budg", "");
+  const [savingsGoal, setSavingsGoal] = usePersistentState("lifeos_exp_save", "");
 
   const { data: expenses } = useQuery({
     queryKey: ["expenses"],

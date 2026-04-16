@@ -75,7 +75,7 @@ export function WeeklyViewPage() {
   });
 
   return (
-    <section className="mx-auto max-w-7xl space-y-6 px-4 py-8 md:px-8">
+    <section className="mx-auto max-w-6xl space-y-6 px-4 py-8 md:px-8">
       <PageHeader
         eyebrow="Week at a glance"
         title={`${dayjs(weekStart).format("D MMM")} – ${dayjs(weekStart).endOf("week").format("D MMM YYYY")}`}
@@ -83,7 +83,7 @@ export function WeeklyViewPage() {
         actions={<PrintButton />}
       />
 
-      <div className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-8 scrollbar-hide">
+      <div className="flex snap-x snap-proximity gap-6 overflow-x-auto pb-12 transition-all">
         {days.map((day) => {
           const iso = day.toISOString();
           const isToday = day.isSame(dayjs(), "day");
@@ -93,8 +93,7 @@ export function WeeklyViewPage() {
           return (
             <Card
               key={iso}
-              style={{ resize: "both" }}
-              className={`flex w-full shrink-0 snap-center flex-col gap-3 overflow-auto min-h-[300px] sm:w-[280px] md:w-[300px] transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:border-terracotta/30 ${isToday ? "ring-2 ring-terracotta/60 ring-offset-1" : ""}`}
+              className={`flex w-[82vw] shrink-0 snap-center flex-col gap-3 overflow-y-auto min-h-[450px] sm:w-[280px] md:w-[320px] transition-all duration-300 hover:shadow-xl hover:border-terracotta/30 ${isToday ? "ring-2 ring-terracotta/60 ring-offset-1" : ""}`}
             >
               {/* Day header */}
               <div className="flex items-start justify-between">

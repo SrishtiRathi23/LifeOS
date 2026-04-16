@@ -1,12 +1,41 @@
-import sanitizeHtml from "sanitize-html";
+import DOMPurify from "dompurify";
+import { JSDOM } from "jsdom";
 
-export function sanitizeRichText(input: string) {
-  return sanitizeHtml(input, {
-    allowedTags: ["p", "b", "i", "em", "strong", "u", "ul", "ol", "li", "blockquote", "br", "h1", "h2", "h3"],
-    allowedAttributes: {}
-  });
-}
+const window = new JSDOM("").window;
+const purify = DOMPurify(window as any);
 
-export function sanitizePlainText(input: string) {
-  return sanitizeHtml(input, { allowedTags: [], allowedAttributes: {} }).trim();
-}
+/**
+ * Strips all HTML tags.
+ */
+export const sanitizePlainText = (input: string): string => {
+  if (!input) return input;
+  return purify.sanitize(input, { ALLOWED_TAGS: [], ALLOWED_ATTR: [] });
+};
+
+/**
+ * Standard sanitize alias.
+ */
+export const sanitize = sanitizePlainText;
+
+/**
+ * Allows basic formatting tags for the rich text editor if needed, 
+ * but currently strictly strips all per Section 4C requirement.
+ */
+export const sanitizeRichText = (input: string): string => {
+  if (!input) return input;
+  // Based on "ALLOWED_TAGS: []" requirement for security hardening:
+  return purify.sanitize(input, { ALLOWED_TAGS: [], ALLOWED_ATTR: [] });
+};
+
+/**
+ * Sanitizes an object by stripping HTML from all string values.
+ */
+export const sanitizeObject = <T extends Record<string, any>>(obj: T): T => {
+  const result = { ...obj };
+  for (const key in result) {
+    if (typeof result[key] === "string") {
+      result[key] = sanitizePlainText(result[key]) as any;
+    }
+  }
+  return result;
+};

@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
+import { usePersistentState } from "@/hooks/usePersistentState";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import toast from "react-hot-toast";
-import { Camera, Plus, Sparkles, Trash } from "lucide-react";
+import { Plus, Trash } from "lucide-react";
 import { api, getErrorMessage } from "@/utils/api";
 import { isoDay, prettyDate } from "@/utils/dateHelpers";
 import { Card } from "@/components/ui/Card";
@@ -34,14 +35,14 @@ type PlanResponse = {
 export function DailyPlannerPage() {
   const queryClient = useQueryClient();
   const selectedDate = useMemo(() => isoDay(), []);
-  const [newTaskTitle, setNewTaskTitle] = useState("");
-  const [brainDump, setBrainDump] = useState("");
-  const [notes, setNotes] = useState("");
-  const [goalFields, setGoalFields] = useState(["", "", ""]);
-  const [water, setWater] = useState(0);
-  const [mood, setMood] = useState<number | null>(null);
-  const [typedText, setTypedText] = useState("");
-  const [parsedTasks, setParsedTasks] = useState<Array<{ title: string; priority: "high" | "medium" | "low"; category: string }>>([]);
+  const [newTaskTitle, setNewTaskTitle] = usePersistentState("lifeos_dp_task", "");
+  const [brainDump, setBrainDump] = usePersistentState("lifeos_dp_bdump", "");
+  const [notes, setNotes] = usePersistentState("lifeos_dp_notes", "");
+  const [goalFields, setGoalFields] = usePersistentState("lifeos_dp_goals", ["", "", ""]);
+  const [water, setWater] = usePersistentState("lifeos_dp_water", 0);
+  const [mood, setMood] = usePersistentState<number | null>("lifeos_dp_mood", null);
+  const [newPriority, setNewPriority] = usePersistentState<string>("lifeos_dp_new_pri", "medium");
+  const [newCategory, setNewCategory] = usePersistentState<string>("lifeos_dp_new_cat", "other");
 
   const { data: tasks } = useQuery({
     queryKey: ["todayTasks", selectedDate],
@@ -72,8 +73,8 @@ export function DailyPlannerPage() {
         await api.post("/tasks", {
           title: payload.title,
           date: selectedDate,
-          category: payload.category ?? "other",
-          priority: payload.priority ?? "medium",
+          category: payload.category ?? newCategory,
+          priority: payload.priority ?? newPriority,
           status: "todo",
           tags: [],
           sortOrder: 0,
@@ -120,27 +121,6 @@ export function DailyPlannerPage() {
     onError: (error) => toast.error(getErrorMessage(error))
   });
 
-  const parseText = useMutation({
-    mutationFn: async () => (await api.post("/tasks/parse-text", { text: typedText })).data,
-    onSuccess: (response) => {
-      setParsedTasks(response.parsed.tasks);
-      toast.success("Parsed your typed list. Review and add what you want.");
-    },
-    onError: (error) => toast.error(getErrorMessage(error))
-  });
-
-  const parseImage = useMutation({
-    mutationFn: async (file: File) => {
-      const formData = new FormData();
-      formData.append("image", file);
-      return (await api.post("/tasks/parse-image", formData)).data;
-    },
-    onSuccess: (response) => {
-      setParsedTasks(response.parsed.tasks);
-      toast.success("Notebook page parsed. Review the tasks below.");
-    },
-    onError: (error) => toast.error(getErrorMessage(error))
-  });
 
   const toggleTask = useMutation({
     mutationFn: async (task: Task) =>
@@ -181,27 +161,61 @@ export function DailyPlannerPage() {
           <Card>
             <div className="flex items-center justify-between">
               <h2 className="font-serif text-3xl italic text-ink">To do today</h2>
-              <label className="inline-flex cursor-pointer items-center rounded-full border border-line bg-card px-4 py-2 text-sm text-ink hover:shadow-glow">
-                <Camera size={16} className="mr-2" />
-                Upload my notebook page
-                <input
-                  type="file"
-                  accept="image/png,image/jpeg,image/webp"
-                  className="hidden"
-                  onChange={(event) => {
-                    const file = event.target.files?.[0];
-                    if (file) parseImage.mutate(file);
-                  }}
-                />
-              </label>
             </div>
 
             <div className="mt-4 flex gap-3">
-              <Input value={newTaskTitle} onChange={(e) => setNewTaskTitle(e.target.value)} placeholder="Add a real task for today..." />
+              <Input
+                value={newTaskTitle}
+                onChange={(e) => setNewTaskTitle(e.target.value)}
+                placeholder="Add a real task for today..."
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && newTaskTitle.trim()) {
+                    createTask.mutate({ title: newTaskTitle.trim() });
+                  }
+                }}
+              />
               <Button type="button" onClick={() => newTaskTitle.trim() && createTask.mutate({ title: newTaskTitle.trim() })}>
                 <Plus size={16} className="mr-2" />
                 Add
               </Button>
+            </div>
+
+            <div className="mt-3 flex flex-wrap gap-2">
+              <div className="flex rounded-full border border-line bg-parchment/50 p-1">
+                {[
+                  { id: "low", label: "Low" },
+                  { id: "medium", label: "Medium" },
+                  { id: "high", label: "Urgent" }
+                ].map((p) => (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => setNewPriority(p.id)}
+                    className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider transition-all ${
+                      newPriority === p.id ? "bg-terracotta text-white shadow-sm" : "text-ink/40 hover:text-ink/70"
+                    }`}
+                  >
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+
+              <div className="flex flex-wrap gap-1.5">
+                {["college", "learning", "career", "personal", "health", "finance", "other"].map((cat) => (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => setNewCategory(cat)}
+                    className={`rounded-full border px-3 py-1 text-[10px] font-medium capitalize transition-all ${
+                      newCategory === cat
+                        ? "border-terracotta bg-parchment text-terracotta"
+                        : "border-line bg-card/30 text-ink/60 hover:border-ink/20"
+                    }`}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
             </div>
 
             <div className="mt-4 space-y-3">
@@ -236,34 +250,7 @@ export function DailyPlannerPage() {
             </div>
           </Card>
 
-          <Card>
-            <h2 className="font-serif text-3xl italic text-ink">Notebook text parser</h2>
-            <Textarea value={typedText} onChange={(e) => setTypedText(e.target.value)} placeholder="Paste a typed task list here if you don’t want to upload an image." className="mt-4" />
-            <div className="mt-3 flex justify-end">
-              <Button type="button" variant="secondary" onClick={() => typedText.trim() && parseText.mutate()}>
-                <Sparkles size={16} className="mr-2" />
-                Parse text
-              </Button>
-            </div>
 
-            {parsedTasks.length > 0 ? (
-              <div className="mt-4 space-y-3">
-                {parsedTasks.map((task, index) => (
-                  <div key={`${task.title}-${index}`} className="flex items-center justify-between rounded-2xl border border-line bg-parchment/70 px-4 py-3">
-                    <div>
-                      <p className="text-sm text-ink">{task.title}</p>
-                      <p className="text-xs capitalize text-ink/55">
-                        {task.category} · {task.priority}
-                      </p>
-                    </div>
-                    <Button type="button" onClick={() => createTask.mutate(task)}>
-                      Add task
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            ) : null}
-          </Card>
         </div>
 
         <div className="space-y-6">

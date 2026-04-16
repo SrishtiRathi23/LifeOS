@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { usePersistentState } from "@/hooks/usePersistentState";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import toast from "react-hot-toast";
@@ -29,13 +30,13 @@ export function DiaryPage() {
   const queryClient = useQueryClient();
   const confirm = useConfirm();
   const today = isoDay();
-  const [content, setContent] = useState("");
-  const [weather, setWeather] = useState("");
-  const [tags, setTags] = useState("");
-  const [gratitude, setGratitude] = useState(["", "", ""]);
-  const [tomorrowPlan, setTomorrowPlan] = useState(["", "", "", "", ""]);
-  const [mood, setMood] = useState<number | null>(null);
-  const [activeId, setActiveId] = useState<string | null>(null);
+  const [content, setContent] = usePersistentState("lifeos_d_content", "");
+  const [weather, setWeather] = usePersistentState("lifeos_d_weather", "");
+  const [tags, setTags] = usePersistentState("lifeos_d_tags", "");
+  const [gratitude, setGratitude] = usePersistentState("lifeos_d_grat", ["", "", ""]);
+  const [tomorrowPlan, setTomorrowPlan] = usePersistentState("lifeos_d_tom", ["", "", "", "", ""]);
+  const [mood, setMood] = usePersistentState<number | null>("lifeos_d_mood", null);
+  const [activeId, setActiveId] = usePersistentState<string | null>("lifeos_d_active", null);
 
   const { data: entries } = useQuery({
     queryKey: ["diaryEntries"],

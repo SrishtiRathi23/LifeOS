@@ -40,7 +40,7 @@ export function AppShell() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -4 }}
               transition={{ duration: 0.15, ease: "easeOut" }}
-              className="pb-24 md:pb-10"
+              className="pb-32 md:pb-10"
             >
               <Outlet />
             </motion.main>

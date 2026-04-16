@@ -1,15 +1,23 @@
 import { Router } from "express";
 import { z } from "zod";
-import fs from "node:fs";
-import path from "node:path";
 import { requireAuth } from "../middleware/auth.js";
-import { upload } from "../middleware/upload.js";
-import { validateBody, validateQuery } from "../middleware/validate.js";
+import { uploadMiddleware as upload } from "../lib/upload.js";
+import { validateBody } from "../middleware/validate.js";
 import { prisma } from "../utils/db.js";
 import { sanitizePlainText } from "../utils/sanitize.js";
 import { ApiError } from "../middleware/errorHandler.js";
+import cloudinary from "../lib/cloudinary.js";
 
 const router = Router();
+
+// Helper to extract Cloudinary public ID from URL
+const extractPublicId = (url: string) => {
+  const parts = url.split("/");
+  const folderParts = parts.slice(parts.indexOf("lifeos"));
+  const lastPart = folderParts[folderParts.length - 1].split(".")[0];
+  folderParts[folderParts.length - 1] = lastPart;
+  return folderParts.join("/");
+};
 
 const visionSchema = z.object({
   title: z.string().max(120).optional().nullable(),
@@ -80,7 +88,7 @@ router.post("/", upload.single("image"), async (req, res) => {
       ...parsedBody,
       title: parsedBody.title ? sanitizePlainText(parsedBody.title) : null,
       affirmation: parsedBody.affirmation ? sanitizePlainText(parsedBody.affirmation) : null,
-      filename: req.file.filename,
+      imageUrl: req.file.path,
       userId: req.user!.id
     }
   });
@@ -114,14 +122,18 @@ router.patch("/:id/image", upload.single("image"), async (req, res) => {
     throw new ApiError(404, "Vision image not found.");
   }
 
-  const oldPath = path.resolve("uploads", existingImage.filename);
-  if (fs.existsSync(oldPath)) {
-    fs.unlinkSync(oldPath);
+  if (existingImage.imageUrl) {
+    try {
+      const publicId = extractPublicId(existingImage.imageUrl);
+      await cloudinary.uploader.destroy(publicId);
+    } catch (error) {
+      console.error("Failed to delete old Cloudinary image:", error);
+    }
   }
 
   const updated = await prisma.visionImage.update({
     where: { id: imageId },
-    data: { filename: req.file.filename }
+    data: { imageUrl: req.file.path }
   });
 
   res.json(updated);
@@ -159,9 +171,13 @@ router.delete("/:id", async (req, res) => {
     throw new ApiError(404, "Vision image not found.");
   }
 
-  const oldPath = path.resolve("uploads", existingImage.filename);
-  if (fs.existsSync(oldPath)) {
-    fs.unlinkSync(oldPath);
+  if (existingImage.imageUrl) {
+    try {
+      const publicId = extractPublicId(existingImage.imageUrl);
+      await cloudinary.uploader.destroy(publicId);
+    } catch (error) {
+      console.error("Failed to delete Cloudinary image on delete:", error);
+    }
   }
 
   await prisma.visionImage.delete({
