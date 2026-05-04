@@ -4,6 +4,8 @@ import { requireAuth } from "../middleware/auth.js";
 import { validateBody } from "../middleware/validate.js";
 import { prisma } from "../utils/db.js";
 import { sanitizePlainText } from "../utils/sanitize.js";
+import { buildEntitlements, hasPremiumAccess } from "../utils/entitlements.js";
+import { ApiError } from "../middleware/errorHandler.js";
 
 const router = Router();
 
@@ -26,10 +28,10 @@ router.use(requireAuth);
 router.get("/", async (req, res) => {
   const user = await prisma.user.findUnique({
     where: { id: req.user!.id },
-    select: { id: true, name: true, email: true, profilePhoto: true, settings: true }
+    select: { id: true, name: true, email: true, profilePhoto: true, settings: true, plan: true, planStatus: true, premiumUntil: true }
   });
 
-  res.json(user);
+  res.json(user ? { ...user, entitlements: buildEntitlements(user) } : null);
 });
 
 router.patch("/", validateBody(settingsSchema), async (req, res) => {
@@ -46,13 +48,22 @@ router.patch("/", validateBody(settingsSchema), async (req, res) => {
         anthropicApiKey: undefined
       }
     },
-    select: { id: true, name: true, email: true, profilePhoto: true, settings: true }
+    select: { id: true, name: true, email: true, profilePhoto: true, settings: true, plan: true, planStatus: true, premiumUntil: true }
   });
 
-  res.json(updated);
+  res.json({ ...updated, entitlements: buildEntitlements(updated) });
 });
 
 router.get("/export", async (req, res) => {
+  const currentUser = await prisma.user.findUniqueOrThrow({
+    where: { id: req.user!.id },
+    select: { plan: true, planStatus: true, premiumUntil: true }
+  });
+
+  if (!hasPremiumAccess(currentUser)) {
+    throw new ApiError(402, "Full data export is a LifeOS Premium feature.");
+  }
+
   const payload = await prisma.user.findUnique({
     where: { id: req.user!.id },
     include: {

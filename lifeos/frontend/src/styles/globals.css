@@ -12,6 +12,7 @@
 
 html {
   scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
@@ -19,33 +20,8 @@ body {
   font-family: "DM Sans", sans-serif;
   background: var(--cream);
   color: var(--ink);
-}
-
-body::before,
-body::after {
-  content: "";
-  position: fixed;
-  inset: auto;
-  pointer-events: none;
-  z-index: 0;
-  filter: blur(70px);
-  opacity: 0.45;
-}
-
-body::before {
-  top: 4rem;
-  right: 6rem;
-  width: 18rem;
-  height: 18rem;
-  background: radial-gradient(circle, color-mix(in srgb, var(--peach) 72%, transparent), transparent 72%);
-}
-
-body::after {
-  left: 2rem;
-  bottom: 3rem;
-  width: 22rem;
-  height: 22rem;
-  background: radial-gradient(circle, color-mix(in srgb, var(--blush) 66%, transparent), transparent 72%);
+  min-width: 320px;
+  text-rendering: optimizeLegibility;
 }
 
 #root {
@@ -60,7 +36,7 @@ select {
 
 input,
 textarea {
-  font-family: 'Dancing Script', cursive;
+  font-family: "DM Sans", sans-serif;
   font-size: 1rem;
   font-weight: 500;
   line-height: 1.5;
@@ -68,6 +44,20 @@ textarea {
 
 button {
   cursor: pointer;
+  min-height: 44px;
+  touch-action: manipulation;
+}
+
+@media (max-width: 640px) {
+  body {
+    font-size: 15px;
+  }
+
+  input,
+  textarea,
+  select {
+    font-size: 16px;
+  }
 }
 
 .paper-noise {

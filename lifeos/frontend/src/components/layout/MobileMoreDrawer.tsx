@@ -1,9 +1,12 @@
 import { NavLink } from "react-router-dom";
-import { Menu, X } from "lucide-react";
+import { Lock, Menu, X } from "lucide-react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { sectionRegistry, type SectionItem } from "@/utils/sections";
+import { useSession } from "@/hooks/useSession";
 
 export function MobileMoreDrawer() {
+  const session = useSession();
+
   return (
     <Dialog.Root>
       <Dialog.Trigger asChild>
@@ -15,7 +18,7 @@ export function MobileMoreDrawer() {
       
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-50 bg-ink/30 backdrop-blur-sm" />
-        <Dialog.Content className="fixed inset-y-0 right-0 z-50 w-[280px] bg-cream p-6 shadow-2xl focus:outline-none overflow-y-auto">
+        <Dialog.Content className="fixed inset-y-0 right-0 z-50 w-[min(88vw,320px)] overflow-y-auto bg-cream p-5 shadow-2xl focus:outline-none">
           <div className="flex items-center justify-between mb-8">
             <h2 className="font-serif text-2xl italic text-ink">All Sections</h2>
             <Dialog.Close asChild>
@@ -33,7 +36,7 @@ export function MobileMoreDrawer() {
                   <NavLink
                     to={item.path}
                     className={({ isActive }) =>
-                      `flex items-center gap-4 rounded-2xl border border-line/40 px-4 py-3 text-sm transition-all ${
+                      `flex items-center gap-4 rounded-lg border border-line/40 px-4 py-3 text-sm transition-all ${
                         isActive 
                           ? "bg-parchment border-terracotta/30 text-terracotta" 
                           : "bg-card/40 text-ink/80 hover:bg-card"
@@ -42,6 +45,7 @@ export function MobileMoreDrawer() {
                   >
                     <Icon size={20} />
                     <span className="font-medium">{item.title}</span>
+                    {item.premium && !session.data?.entitlements?.isPremium && <Lock className="ml-auto text-ink/35" size={15} />}
                   </NavLink>
                 </Dialog.Close>
               );

@@ -8,7 +8,7 @@ export function MobileNav() {
   const items = sectionRegistry.filter((item: SectionItem) => item.mobilePrimary).slice(0, 4);
 
   return (
-    <nav className="no-print fixed inset-x-3 bottom-3 z-40 rounded-full border border-line/70 bg-card/95 p-1 px-3 shadow-glow md:hidden">
+    <nav className="no-print fixed inset-x-3 bottom-3 z-40 rounded-lg border border-line/70 bg-card/95 p-1 px-2 shadow-glow md:hidden">
       <div className="flex items-center justify-between gap-1">
         {items.map((item: SectionItem) => {
           const Icon = item.icon;
@@ -18,7 +18,7 @@ export function MobileNav() {
               to={item.path}
               className={({ isActive }) =>
                 clsx(
-                  "flex flex-1 flex-col items-center gap-1 rounded-full py-2 text-[10px] sm:text-[11px] font-medium transition-all",
+                  "flex min-w-0 flex-1 flex-col items-center gap-1 rounded-lg py-2 text-[10px] sm:text-[11px] font-medium transition-all",
                   isActive ? "bg-parchment text-terracotta" : "text-ink/60"
                 )
               }

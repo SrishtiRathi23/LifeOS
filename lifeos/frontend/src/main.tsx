@@ -30,3 +30,17 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
     </QueryClientProvider>
   </React.StrictMode>
 );
+
+const isLocalPreview = ["localhost", "127.0.0.1"].includes(window.location.hostname);
+
+if ("serviceWorker" in navigator && isLocalPreview) {
+  navigator.serviceWorker.getRegistrations().then((registrations) => {
+    registrations.forEach((registration) => registration.unregister());
+  });
+}
+
+if ("serviceWorker" in navigator && import.meta.env.PROD && !isLocalPreview) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/sw.js").catch(() => undefined);
+  });
+}

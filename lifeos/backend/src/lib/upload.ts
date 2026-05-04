@@ -1,20 +1,10 @@
 import multer from "multer";
-import { CloudinaryStorage } from "multer-storage-cloudinary";
+import { PassThrough } from "node:stream";
 import cloudinary from "./cloudinary.js";
 import { ApiError } from "../middleware/errorHandler.js";
 
-const storage = new CloudinaryStorage({
-  cloudinary: cloudinary as any,
-  params: async (req: any, file: any) => ({
-    folder: `lifeos/users/${req.user?.id || "public"}/vision`,
-    allowed_formats: ["jpg", "jpeg", "png", "webp", "gif"],
-    transformation: [{ width: 1200, crop: "limit", quality: "auto" }],
-    public_id: `vision_${Date.now()}_${Math.random().toString(36).slice(2)}`,
-  }),
-});
-
 export const uploadMiddleware = multer({
-  storage,
+  storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
     const allowed = ["image/jpeg", "image/png", "image/webp", "image/gif"];
@@ -25,6 +15,31 @@ export const uploadMiddleware = multer({
     }
   },
 });
+
+export async function uploadVisionImage(buffer: Buffer, userId: string) {
+  return new Promise<string>((resolve, reject) => {
+    const upload = cloudinary.uploader.upload_stream(
+      {
+        folder: `lifeos/users/${userId}/vision`,
+        allowed_formats: ["jpg", "jpeg", "png", "webp", "gif"],
+        transformation: [{ width: 1200, crop: "limit", quality: "auto" }],
+        public_id: `vision_${Date.now()}_${Math.random().toString(36).slice(2)}`
+      },
+      (error, result) => {
+        if (error || !result?.secure_url) {
+          reject(error ?? new Error("Cloudinary upload failed."));
+          return;
+        }
+
+        resolve(result.secure_url);
+      }
+    );
+
+    const stream = new PassThrough();
+    stream.end(buffer);
+    stream.pipe(upload);
+  });
+}
 
 // For AI notebook image parsing (in-memory, not saved to cloud)
 export const memoryUpload = multer({

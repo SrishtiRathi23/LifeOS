@@ -7,6 +7,13 @@ export type SessionUser = {
   email: string;
   profilePhoto?: string | null;
   settings?: Record<string, unknown> | null;
+  entitlements?: {
+    plan: "free" | "premium";
+    status: "active" | "trialing" | "past_due" | "canceled";
+    premiumUntil?: string | null;
+    isPremium: boolean;
+    premiumFeatures: Record<string, boolean>;
+  };
 };
 
 export function useSession() {

@@ -1,5 +1,6 @@
 generator client {
-  provider = "prisma-client-js"
+  provider   = "prisma-client-js"
+  engineType = "client"
 }
 
 datasource db {
@@ -119,12 +120,37 @@ enum HobbyCategory {
   other
 }
 
+enum SubscriptionPlan {
+  free
+  premium
+}
+
+enum SubscriptionStatus {
+  active
+  trialing
+  past_due
+  canceled
+}
+
+enum ReminderSource {
+  task
+  assignment
+  exam
+  internship
+  hackathon
+  learning
+  goal
+}
+
 model User {
   id            String             @id @default(cuid())
   name          String
   email         String             @unique
   passwordHash  String
   profilePhoto  String?
+  plan          SubscriptionPlan   @default(free)
+  planStatus    SubscriptionStatus @default(active)
+  premiumUntil  DateTime?
   createdAt     DateTime           @default(now())
   updatedAt     DateTime           @updatedAt
   settings      Json?
@@ -152,6 +178,57 @@ model User {
   moodLogs      MoodLog[]
   sleepLogs     SleepLog[]
   waterLogs     WaterLog[]
+  reminderPrefs ReminderPreference?
+  pushSubscriptions PushSubscription[]
+  reminderEvents ReminderEvent[]
+}
+
+model ReminderPreference {
+  id               String   @id @default(cuid())
+  userId           String   @unique
+  enabled          Boolean  @default(true)
+  dailyDigestTime  String   @default("08:00")
+  remindBeforeDays Int[]    @default([7, 3, 1])
+  includeTasks     Boolean  @default(true)
+  includeCollege   Boolean  @default(true)
+  includeCareer    Boolean  @default(true)
+  includeLearning  Boolean  @default(true)
+  includeGoals     Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  endpoint  String   @unique
+  keys      Json
+  userAgent String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model ReminderEvent {
+  id          String         @id @default(cuid())
+  userId      String
+  source      ReminderSource
+  sourceId    String
+  title       String
+  dueAt       DateTime
+  remindAt    DateTime
+  deliveredAt DateTime?
+  dismissedAt DateTime?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, source, sourceId, remindAt])
+  @@index([userId, remindAt])
+  @@index([deliveredAt, remindAt])
 }
 
 model DailyPlan {

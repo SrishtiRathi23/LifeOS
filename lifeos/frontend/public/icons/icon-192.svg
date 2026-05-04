@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" role="img" aria-label="LifeOS app icon">
+  <rect width="192" height="192" rx="42" fill="#B96F4A"/>
+  <rect x="34" y="36" width="124" height="120" rx="18" fill="#FFF8EE"/>
+  <path d="M58 72h76M58 96h54M58 120h68" stroke="#3D2A1F" stroke-width="10" stroke-linecap="round"/>
+  <circle cx="138" cy="52" r="18" fill="#F1C7A9"/>
+</svg>

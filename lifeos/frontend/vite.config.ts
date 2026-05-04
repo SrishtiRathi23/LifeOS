@@ -24,7 +24,7 @@ export default defineConfig({
           "vendor-react": ["react", "react-dom", "react-router-dom"],
           "vendor-ui": ["lucide-react", "framer-motion", "@radix-ui/react-dialog", "@radix-ui/react-popover"],
           "vendor-charts": ["recharts"],
-          "vendor-editor": ["@tiptap/react", "@tiptap/starter-kit", "@tiptap/extension-character-count", "@tiptap/extension-placeholder"],
+          "vendor-editor": ["@tiptap/react", "@tiptap/starter-kit", "@tiptap/extension-placeholder"],
           "vendor-utils": ["axios", "dayjs", "zod", "zustand"]
         }
       }

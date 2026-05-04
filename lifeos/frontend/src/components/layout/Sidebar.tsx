@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from "react-router-dom";
-import { LogOut, Menu, Sparkles } from "lucide-react";
+import { Lock, LogOut, Menu, Sparkles } from "lucide-react";
 import clsx from "clsx";
 import toast from "react-hot-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -66,6 +66,9 @@ export function Sidebar() {
             >
               <Icon size={17} />
               {!sidebarCollapsed && <span>{section.title}</span>}
+              {section.premium && !session.data?.entitlements?.isPremium && !sidebarCollapsed && (
+                <Lock className="ml-auto text-ink/35" size={14} />
+              )}
             </NavLink>
           );
         })}

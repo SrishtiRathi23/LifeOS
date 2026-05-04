@@ -25,6 +25,7 @@ export type SectionItem = {
   icon: LucideIcon;
   loader: () => Promise<{ default?: ComponentType; [key: string]: unknown }>;
   mobilePrimary?: boolean;
+  premium?: boolean;
 };
 
 export const sectionRegistry: SectionItem[] = [
@@ -34,14 +35,14 @@ export const sectionRegistry: SectionItem[] = [
   { title: "Monthly View", path: "/monthly-view", icon: Calendar, loader: () => import("@/pages/MonthlyViewPage"), mobilePrimary: true },
   { title: "Diary / Journal", path: "/diary", icon: NotebookPen, loader: () => import("@/pages/DiaryPage"), mobilePrimary: true },
   { title: "Goals & Aspirations", path: "/goals", icon: Goal, loader: () => import("@/pages/GoalsPage") },
-  { title: "Vision Board", path: "/vision-board", icon: Image, loader: () => import("@/pages/VisionBoardPage") },
-  { title: "Expense Tracker", path: "/expenses", icon: DollarSign, loader: () => import("@/pages/ExpensesPage") },
-  { title: "College Tracker", path: "/college", icon: GraduationCap, loader: () => import("@/pages/CollegePage") },
-  { title: "Internship Tracker", path: "/internships", icon: BriefcaseBusiness, loader: () => import("@/pages/InternshipsPage") },
-  { title: "Hackathon Tracker", path: "/hackathons", icon: Lightbulb, loader: () => import("@/pages/HackathonsPage") },
+  { title: "Vision Board", path: "/vision-board", icon: Image, loader: () => import("@/pages/VisionBoardPage"), premium: true },
+  { title: "Expense Tracker", path: "/expenses", icon: DollarSign, loader: () => import("@/pages/ExpensesPage"), premium: true },
+  { title: "College Tracker", path: "/college", icon: GraduationCap, loader: () => import("@/pages/CollegePage"), premium: true },
+  { title: "Internship Tracker", path: "/internships", icon: BriefcaseBusiness, loader: () => import("@/pages/InternshipsPage"), premium: true },
+  { title: "Hackathon Tracker", path: "/hackathons", icon: Lightbulb, loader: () => import("@/pages/HackathonsPage"), premium: true },
   { title: "Wellness & Habits", path: "/wellness", icon: HeartPulse, loader: () => import("@/pages/WellnessPage") },
-  { title: "Exercise Log", path: "/exercise", icon: Dumbbell, loader: () => import("@/pages/ExercisePage") },
-  { title: "Learning Tracker", path: "/learning", icon: BookOpen, loader: () => import("@/pages/LearningPage") },
-  { title: "Hobbies", path: "/hobbies", icon: BookHeart, loader: () => import("@/pages/HobbiesPage") },
+  { title: "Exercise Log", path: "/exercise", icon: Dumbbell, loader: () => import("@/pages/ExercisePage"), premium: true },
+  { title: "Learning Tracker", path: "/learning", icon: BookOpen, loader: () => import("@/pages/LearningPage"), premium: true },
+  { title: "Hobbies", path: "/hobbies", icon: BookHeart, loader: () => import("@/pages/HobbiesPage"), premium: true },
   { title: "Settings", path: "/settings", icon: Settings, loader: () => import("@/pages/SettingsPage") }
 ];

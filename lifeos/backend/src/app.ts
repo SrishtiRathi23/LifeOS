@@ -2,7 +2,7 @@ import express from "express";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import helmet from "helmet";
-import { env } from "./utils/env.js";
+import { allowedClientOrigins, env } from "./utils/env.js";
 import authRoutes from "./routes/auth.js";
 import dashboardRoutes from "./routes/dashboard.js";
 import taskRoutes from "./routes/tasks.js";
@@ -20,9 +20,11 @@ import collegeRoutes from "./routes/college.js";
 import internshipRoutes from "./routes/internships.js";
 import hackathonRoutes from "./routes/hackathons.js";
 import settingsRoutes from "./routes/settings.js";
+import reminderRoutes from "./routes/reminders.js";
+import billingRoutes from "./routes/billing.js";
 import "express-async-errors";
 import * as Sentry from "@sentry/node";
-import pinoHttp from "pino-http";
+import { pinoHttp } from "pino-http";
 import compression from "compression";
 import { logger } from "./lib/logger.js";
 import { errorHandler } from "./middleware/errorHandler.js";
@@ -35,7 +37,7 @@ app.use(pinoHttp({ logger }));
 
 app.use(
   cors({
-    origin: env.NODE_ENV === "production" ? env.CLIENT_URL : ["http://localhost:5173", "http://localhost:5174"],
+    origin: allowedClientOrigins,
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
@@ -84,6 +86,8 @@ app.use("/api/v1/college", collegeRoutes);
 app.use("/api/v1/internships", internshipRoutes);
 app.use("/api/v1/hackathons", hackathonRoutes);
 app.use("/api/v1/settings", settingsRoutes);
+app.use("/api/v1/reminders", reminderRoutes);
+app.use("/api/v1/billing", billingRoutes);
 
 if (env.NODE_ENV === "production" && env.SENTRY_DSN) {
   Sentry.setupExpressErrorHandler(app);

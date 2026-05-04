@@ -10,6 +10,8 @@ import { AuthPage } from "@/pages/AuthPage";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { printPage } from "@/utils/print";
+import { PremiumGate } from "@/components/shared/PremiumGate";
+import { isPremiumPath, paidFeatureCopy } from "@/utils/premium";
 
 export function AppShell() {
   const location = useLocation();
@@ -25,6 +27,9 @@ export function AppShell() {
   if (session.isError) {
     return <AuthPage />;
   }
+
+  const isPremiumLocked = isPremiumPath(location.pathname) && !session.data?.entitlements?.isPremium;
+  const premiumCopy = paidFeatureCopy[location.pathname];
 
   return (
     <div className="min-h-screen bg-cream text-ink">
@@ -42,7 +47,11 @@ export function AppShell() {
               transition={{ duration: 0.15, ease: "easeOut" }}
               className="pb-32 md:pb-10"
             >
-              <Outlet />
+              {isPremiumLocked && premiumCopy ? (
+                <PremiumGate title={premiumCopy.title} description={premiumCopy.description} />
+              ) : (
+                <Outlet />
+              )}
             </motion.main>
           </AnimatePresence>
         </div>

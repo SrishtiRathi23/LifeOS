@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { z } from "zod";
 import { requireAuth } from "../middleware/auth.js";
-import { uploadMiddleware as upload } from "../lib/upload.js";
+import { uploadMiddleware as upload, uploadVisionImage } from "../lib/upload.js";
 import { validateBody } from "../middleware/validate.js";
 import { prisma } from "../utils/db.js";
 import { sanitizePlainText } from "../utils/sanitize.js";
@@ -82,13 +82,14 @@ router.post("/", upload.single("image"), async (req, res) => {
     year: req.body.year || "2026",
     position: req.body.position ? Number(req.body.position) : 0
   };
+  const imageUrl = await uploadVisionImage(req.file.buffer, req.user!.id);
 
   const image = await prisma.visionImage.create({
     data: {
       ...parsedBody,
       title: parsedBody.title ? sanitizePlainText(parsedBody.title) : null,
       affirmation: parsedBody.affirmation ? sanitizePlainText(parsedBody.affirmation) : null,
-      imageUrl: req.file.path,
+      imageUrl,
       userId: req.user!.id
     }
   });
@@ -96,8 +97,10 @@ router.post("/", upload.single("image"), async (req, res) => {
   res.status(201).json(image);
 });
 
-router.patch("/reorder", validateBody(z.array(z.object({ id: z.string(), position: z.number() }))), async (req, res) => {
-  const updates = req.body;
+const reorderSchema = z.array(z.object({ id: z.string(), position: z.number() }));
+
+router.patch("/reorder", validateBody(reorderSchema), async (req, res) => {
+  const updates = req.body as z.infer<typeof reorderSchema>;
   await prisma.$transaction(
     updates.map((update) =>
       prisma.visionImage.updateMany({
@@ -131,9 +134,11 @@ router.patch("/:id/image", upload.single("image"), async (req, res) => {
     }
   }
 
+  const imageUrl = await uploadVisionImage(req.file.buffer, req.user!.id);
+
   const updated = await prisma.visionImage.update({
     where: { id: imageId },
-    data: { imageUrl: req.file.path }
+    data: { imageUrl }
   });
 
   res.json(updated);
